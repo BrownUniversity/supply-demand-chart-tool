@@ -16,5 +16,8 @@
     "paper.js"
   ],
   "author": "Kelly Egan",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "paper": "^0.12.0"
+  }
 }
