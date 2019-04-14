@@ -4,11 +4,29 @@
 	<meta charset="UTF-8">
 	<script type="text/javascript" src="node_modules/paper/dist/paper-full.min.js"></script>
 	<script type="text/paperscript" canvas="chart-canvas" src="js/chart.js" async="async"></script>
+	<style>
+	body{ width: 100%; background-color: #e2e2e2; }
+
+	main {
+		margin: 10px auto;
+		width: 464px;
+		height: 464px;
+		display: block;
+	}
+
+	canvas {
+		background-color: #ffffff;
+		width: 100%;
+		height: 100%;
+	}
+	</style>
 </head>
 
 <body lang="en">
 	<main>
-		<canvas id="chart-canvas" resize></canvas>
+		<canvas id="chart-canvas">
+			<p>Chart show relationship between supply in demand.</p>
+		</canvas>
 	</main>
 </body>
 
