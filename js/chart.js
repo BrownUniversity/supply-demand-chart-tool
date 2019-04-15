@@ -1,24 +1,58 @@
-var style = {
-	strokeColor: '#E4141B',
-	strokeWidth: 8,
-	strokeCap: 'round'	
+// Chart settings
+var types = ["Supply", "Demand"];
+var numberOfLinesPerType = 2;
+
+var chartPosition = new Point(0, 0);
+var chartSize = new Size(400, 400);
+var chartBoundries = new Rectangle( chartPosition, chartSize);
+chartBoundries.center = view.center;
+
+// Colors
+var blues = [
+	"#08519c",
+	"#3182bd",
+	"#6baed6",
+];
+
+var oranges = [
+	"#e6550d",
+	"#fd8d3c",
+	"#fdbe85",
+];
+
+// Styles
+var chartLineWidth = 7;
+var axisLineWidth = 1;
+var intersectionLineWidth = 2;
+var chartLineStrokeCap = "round";
+var axisLineStrokeCap = "butt";
+var intersectionLineStrokeCap = "round";
+
+var supplyLineStyle = {
+	strokeWidth: chartLineWidth,
+	strokeCap: chartLineStrokeCap	
 };
 
-var lines = [];
+var demandLineStyle = {
+	strokeWidth: chartLineWidth,
+	strokeCap: chartLineStrokeCap	
+};
 
-function onMouseDown(event) {
-	var line = new Path(style);
-	line.add(event.point);
-	line.add(event.point);
-	lines.push(line);
+var axisLineStyles = {
+	strokeColor: "black",
+	strokeWidth: axisLineWidth,
 }
 
-function onMouseDrag(event) {
-	var line = lines[lines.length - 1];
-	line.lastSegment.point = event.point;
+/**
+ * Draw a charts axis given its boundries
+ * @param {*} chartBoundries 
+ */
+function drawAxis( chartBoundries ) {
+	var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
+	leftAxis.strokeColor = axisLineStyles.strokeColor;
+
+	var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
+	bottomAxis.strokeColor = axisLineStyles.strokeColor;
 }
 
-function onMouseUp(event) {
-	console.log("There are " + lines.length + " lines.");
-}
-
+drawAxis( chartBoundries );
