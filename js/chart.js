@@ -32,7 +32,6 @@ var chartLines = [
 		start: 0.2,
 		end: 0.7,
 		color: oranges[0],
-		path: null
 	},
 	{
 		label: "Supply 2",
@@ -40,7 +39,6 @@ var chartLines = [
 		start: 0.3,
 		end: 0.8,
 		color: oranges[1],
-		path: null
 	},
 	{
 		label: "Demand 1",
@@ -48,7 +46,6 @@ var chartLines = [
 		start: 0.7,
 		end: 0.2,
 		color: blues[0],
-		path: null
 	},
 	{
 		label: "Demand 2",
@@ -56,7 +53,6 @@ var chartLines = [
 		start: 0.8,
 		end: 0.3,
 		color: blues[1],
-		path: null
 	}
 ];
 
@@ -85,17 +81,19 @@ var axisLabelStyles = {
 	fontSize: 20
 }
 
-createAxis( xAxisLabelText, yAxisLabelText, chartBoundries );
-chartLines = createChartLines( chartLines, chartBoundries );
-createIntersectionLines( chartLines, chartBoundries );
+var axesLayer = createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
+var chartLinesLayer = createChartLines( chartLines, chartBoundries );
+var intersectionsLayer = createIntersectionLines( chartLinesLayer, chartBoundries );
 
-console.log(project.layers);
+intersectionsLayer.insertBelow(axesLayer);
+
+console.log(chartLinesLayer);
 
 /**
  * Create charts axis given its boundries
  * @param {*} chartBoundries 
  */
-function createAxis( xAxisLabelText, yAxisLabelText, chartBoundries ) {
+function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
 	var currentLayer = project.activeLayer
 	var axesLayer = new Layer();
 	axesLayer.name = "axes";
@@ -153,23 +151,29 @@ function createChartLines( chartLines, chartBoundries ){
 		var linePath = new Path.Line(startPoint, endPoint);
 		linePath.style = chartLineStyle;
 		linePath.strokeColor = currentLine.color;
-
-		chartLines[i].path = linePath;
+		linePath.data = {label: currentLine.label, type: currentLine.type};
 	}
 
 	currentLayer.activate();
-	return chartLines;
+	return chartLinesLayer;
 }
 
-function createIntersectionLines( chartLines, chartBoundries ){
+/**
+ * Given the layer with chart lines get the intersections of with lines of other types
+ * @param {Layer} chartLinesLayer 
+ * @param {Rectangle} chartBoundries 
+ */
+function createIntersectionLines( chartLinesLayer, chartBoundries ){
 	var currentLayer = project.activeLayer;
 	var intersectionsLayer = new Layer();
 	intersectionsLayer.name = "intersections"
 
+	var chartLines = chartLinesLayer.children;
+
 	for( var i = 0; i < chartLines.length; i++){
 		for( var j = i + 1; j < chartLines.length; j++) {
-			if( chartLines[i].type != chartLines[j].type) {
-				var intersectionPoint = chartLines[i].path.getCrossings(chartLines[j].path)[0].point;
+			if( chartLines[i].data.type != chartLines[j].data.type) {
+				var intersectionPoint = chartLines[i].getCrossings(chartLines[j])[0].point;
 				var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
 				var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
 				var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
@@ -179,6 +183,7 @@ function createIntersectionLines( chartLines, chartBoundries ){
 	}
 
 	currentLayer.activate();
+	return intersectionsLayer;
 }
 
 /**
