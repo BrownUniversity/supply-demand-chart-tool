@@ -79,8 +79,14 @@ var axisLabelStyles = {
 	fontSize: 20
 }
 
+var chartLineLabelStyles = {
+	fontFamily: "'Roboto', 'sans-serif'",
+	fontSize: 18
+}
+
 var axesLayer = createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 var chartLinesLayer = createChartLines( chartLines, chartBoundries );
+var chartLineLabels = createChartLineLabels(chartLinesLayer);
 var intersectionsLayer = createIntersectionLines( chartLinesLayer, chartBoundries );
 
 intersectionsLayer.insertBelow(axesLayer);
@@ -160,9 +166,21 @@ function createChartLines( chartLines, chartBoundries ){
 	});
 }
 
-function createChartLineLabels( chartLinesLayer, chartBoundries ) {
+function createChartLineLabels( chartLinesLayer ) {
 	return constructOnNewLayer("chartLineLabels", function () {
 		var chartLines = chartLinesLayer.children;
+
+		for( var i = 0; i < chartLines.length; i++) {
+			var currentLine = chartLines[i];
+
+			var labelPosition = new Point(currentLine.lastSegment.point);
+			labelPosition.x += 10;
+			var label = new PointText( labelPosition );
+			label.style = chartLineLabelStyles;
+			label.content = currentLine.data.label;
+			label.fillColor = currentLine.strokeColor;
+
+		}
 	});
 }
 
