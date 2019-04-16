@@ -19,6 +19,9 @@ var chartSize = new Size(380, 380);
 var chartBoundries = new Rectangle( chartPosition, chartSize);
 chartBoundries.center = view.center;
 
+//Area to register boundaries of dragging of chart lines
+var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
+
 var xAxisLabelText = "Price";
 var yAxisLabelText = "Quantity";
 
@@ -91,10 +94,63 @@ var intersectionsLayer = createIntersectionLines( chartLinesLayer, chartBoundrie
 
 intersectionsLayer.insertBelow(axesLayer);
 
-/* exported onMouseDrag */
-function onMouseDrag(event) {
+
+// Options for selecting objects
+var hitOptions = {
+	segments: true,
+	stroke: true,
+	fill: false,
+	tolerance: 5,
+	match: function (hitResults) {
+		return hitResults.item.layer == chartLinesLayer;
+	}
+};
+
+var selectedSegment, selectedPath;
+
+/* exported onMouseDown */
+function onMouseDown(event){
+	selectedSegment = null;
+	selectedPath = null;
+
+	var hitResults = project.hitTest(event.point, hitOptions);
+
+	//If not hit results nothing to do
+	if(!hitResults) {
+		return;
+	}
+
+	selectedPath = hitResults.item;
 	
+	if( hitResults.type == 'segment') {
+		selectedSegment = hitResults.segment;
+	} else if( hitResults.type == 'stroke' ) {
+		selectedSegment = null;
+	}
 }
+
+/* exported onMouseDrag */
+function onMouseDrag(event){
+	if( event.point.isInside(dragBoundries) ) {
+		if(selectedSegment) {
+			selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+		} else if(selectedPath) {
+			//TODO: Fix overshoot of ends of path 
+			selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+		}
+	}
+}
+
+/**
+ * Constrain a given value between a maximum and minimum value
+ * @param {Number} value 
+ * @param {Number} min 
+ * @param {Number} max 
+ */
+function constrain(value, min, max) {
+	return Math.min(Math.max(value, min), max);
+}
+
 
 /**
  * Create and return a new layer and call constructor function to create new objects on that layer.
