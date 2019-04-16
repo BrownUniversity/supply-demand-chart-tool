@@ -101,10 +101,10 @@ function createAxis( xAxisLabelText, yAxisLabelText, chartBoundries ) {
 	axesLayer.name = "axes";
 
 	var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
-	setItemStyle(leftAxis, axisLineStyles);
+	leftAxis.style = axisLineStyles;
 
 	var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
-	setItemStyle(bottomAxis, axisLineStyles);
+	bottomAxis.style = axisLineStyles;
 
 	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
 
@@ -122,14 +122,14 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomCenter);
 	xLabelPosition.y += 30;
 	var xAxisLabel = new PointText( xLabelPosition );
-	setItemStyle(xAxisLabel, axisLabelStyles);
+	xAxisLabel.style = axisLabelStyles;
 	xAxisLabel.justification = "center";
 	xAxisLabel.content = xAxisLabelText;
 
 	var yLabelPosition = new Point(chartBoundries.leftCenter);
 	yLabelPosition.x -= 10;
 	var yAxisLabel = new PointText( yLabelPosition );
-	setItemStyle(yAxisLabel, axisLabelStyles);
+	yAxisLabel.style = axisLabelStyles;
 	yAxisLabel.justification = "right";
 	yAxisLabel.content = yAxisLabelText;	
 }
@@ -151,7 +151,7 @@ function createChartLines( chartLines, chartBoundries ){
 		var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
 
 		var linePath = new Path.Line(startPoint, endPoint);
-		setItemStyle(linePath, chartLineStyle );
+		linePath.style = chartLineStyle;
 		linePath.strokeColor = currentLine.color;
 
 		chartLines[i].path = linePath;
@@ -173,25 +173,12 @@ function createIntersectionLines( chartLines, chartBoundries ){
 				var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
 				var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
 				var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
-				setItemStyle(intersection, intersectionLineStyle);
+				intersection.style = intersectionLineStyle;
 			}
 		}
 	}
 
 	currentLayer.activate();
-}
-
-/**
- * Apply styles in a given object to an item
- * @param {Item} item 
- * @param {*} itemStyles 
- */
-function setItemStyle( item, itemStyles ) {
-	for( style in itemStyles ){
-		if(itemStyles.hasOwnProperty(style)) {
-			item[style] = itemStyles[style];
-		}
-	}
 }
 
 /**
