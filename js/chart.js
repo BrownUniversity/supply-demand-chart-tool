@@ -1,5 +1,4 @@
 
-
 // Colors
 var blues = [
 	"#08519c",
@@ -32,85 +31,100 @@ var chartLines = [
 		type: "supply",
 		start: 0.2,
 		end: 0.7,
-		color: oranges[0]
+		color: oranges[0],
+		path: null
 	},
 	{
 		label: "Supply 2",
 		type: "supply",
 		start: 0.3,
 		end: 0.8,
-		color: oranges[1]
+		color: oranges[1],
+		path: null
 	},
 	{
 		label: "Demand 1",
 		type: "demand",
 		start: 0.7,
 		end: 0.2,
-		color: blues[0]
+		color: blues[0],
+		path: null
 	},
 	{
 		label: "Demand 2",
 		type: "demand",
 		start: 0.8,
 		end: 0.3,
-		color: blues[1]
+		color: blues[1],
+		path: null
 	}
 ];
 
 // Styles
-var chartLineWidth = 6;
-var axisLineWidth = 1;
-var intersectionLineWidth = 2;
-var chartLineStrokeCap = "round";
-var axisLineStrokeCap = "butt";
-var intersectionLineStrokeCap = "round";
 
-var supplyLineStyle = {
-	strokeWidth: chartLineWidth,
-	strokeCap: chartLineStrokeCap	
+var chartLineStyle = {
+	strokeWidth: 6,
+	strokeCap: "round"	
 };
 
-var demandLineStyle = {
-	strokeWidth: chartLineWidth,
-	strokeCap: chartLineStrokeCap	
-};
+var intersectionLineStyle = {
+	strokeColor: "#bbbbbb",
+	strokeWidth: 2,
+	strokeCap: "butt",
+	dashArray: [3, 3]
+}
 
 var axisLineStyles = {
 	strokeColor: "black",
-	strokeWidth: axisLineWidth,
+	strokeWidth: 1,
 }
 
 var axisLabelStyles = {
 	color: "black",
 	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 24
-
+	fontSize: 20
 }
 
-drawAxis( chartBoundries );
-drawAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
-drawChartLines( chartLines, chartBoundries );
+createAxis( xAxisLabelText, yAxisLabelText, chartBoundries );
+chartLines = createChartLines( chartLines, chartBoundries );
+createIntersectionLines( chartLines, chartBoundries );
+
+console.log(project.layers);
 
 /**
- * Draw a charts axis given its boundries
+ * Create charts axis given its boundries
  * @param {*} chartBoundries 
  */
-function drawAxis( chartBoundries ) {
+function createAxis( xAxisLabelText, yAxisLabelText, chartBoundries ) {
+	var currentLayer = project.activeLayer
+	var axesLayer = new Layer();
+	axesLayer.name = "axes";
+
 	var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
 	setItemStyle(leftAxis, axisLineStyles);
 
 	var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
 	setItemStyle(bottomAxis, axisLineStyles);
+
+	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
+
+	currentLayer.activate();
+	return axesLayer;
 }
 
-function drawAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
+/**
+ * Create labels for chart axis
+ * @param {*} xAxisLabelText 
+ * @param {*} yAxisLabelText 
+ * @param {*} chartBoundries 
+ */
+function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomCenter);
 	xLabelPosition.y += 30;
 	var xAxisLabel = new PointText( xLabelPosition );
 	setItemStyle(xAxisLabel, axisLabelStyles);
 	xAxisLabel.justification = "center";
 	xAxisLabel.content = xAxisLabelText;
-	
 
 	var yLabelPosition = new Point(chartBoundries.leftCenter);
 	yLabelPosition.x -= 10;
@@ -121,8 +135,55 @@ function drawAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 }
 
 /**
+ * Create the lines of the chart
+ * @param {*} chartLines 
+ * @param {*} chartBoundries 
+ */
+function createChartLines( chartLines, chartBoundries ){
+	var currentLayer = project.activeLayer;
+	var chartLinesLayer = new Layer();
+	chartLinesLayer.name = "chartLines";
+
+	for(var i = 0; i < chartLines.length; i++) {
+		currentLine = chartLines[i];
+
+		var startPoint = getChartPosition(0, currentLine.start, chartBoundries);
+		var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
+
+		var linePath = new Path.Line(startPoint, endPoint);
+		setItemStyle(linePath, chartLineStyle );
+		linePath.strokeColor = currentLine.color;
+
+		chartLines[i].path = linePath;
+	}
+
+	currentLayer.activate();
+	return chartLines;
+}
+
+function createIntersectionLines( chartLines, chartBoundries ){
+	var currentLayer = project.activeLayer;
+	var intersectionsLayer = new Layer();
+	intersectionsLayer.name = "intersections"
+
+	for( var i = 0; i < chartLines.length; i++){
+		for( var j = i + 1; j < chartLines.length; j++) {
+			if( chartLines[i].type != chartLines[j].type) {
+				var intersectionPoint = chartLines[i].path.getCrossings(chartLines[j].path)[0].point;
+				var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
+				var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
+				var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
+				setItemStyle(intersection, intersectionLineStyle);
+			}
+		}
+	}
+
+	currentLayer.activate();
+}
+
+/**
  * Apply styles in a given object to an item
- * @param {*} item 
+ * @param {Item} item 
  * @param {*} itemStyles 
  */
 function setItemStyle( item, itemStyles ) {
@@ -134,29 +195,10 @@ function setItemStyle( item, itemStyles ) {
 }
 
 /**
- * Create the lines of the chart
- * @param {*} chartLines 
- * @param {*} chartBoundries 
- */
-function drawChartLines( chartLines, chartBoundries ){
-	for(var i = 0; i < chartLines.length; i++) {
-		currentLine = chartLines[i];
-
-		var startPoint = getChartPosition(0, currentLine.start, chartBoundries);
-		var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
-
-		var linePath = new Path.Line(startPoint, endPoint);
-		linePath.strokeWidth = chartLineWidth;
-		linePath.strokeColor = currentLine.color;
-		linePath.strokeCap = chartLineStrokeCap;
-	}
-}
-
-/**
  * Get position of lines on chart from x and y values between 0 and 1
- * @param {*} x 
- * @param {*} y 
- * @param {*} chartBoundries 
+ * @param {Number} x Value should between  0 an 1
+ * @param {Number} y Value should between  0 an 1
+ * @param {Rectangle} chartBoundries 
  */
 function getChartPosition( x, y, chartBoundries ) {
 	var xPos = chartBoundries.left + chartBoundries.width * x;
@@ -165,14 +207,13 @@ function getChartPosition( x, y, chartBoundries ) {
 	return new Point(xPos, yPos);
 }
 
+/**
+ * Given a point within the chart/canvas space return a value between 0 and 1.0
+ * @param {Point} point 
+ * @param {Rectangle} chartBoundries 
+ */
 function getUnitPosition( point, chartBoundries ) {
 	var x = (point.x - chartBoundries.left) / chartBoundries.width;
 	var y = (chartBoundries.top + chartBoundries.height - point.y) / chartBoundries.height;
 	return new Point(x, y);
 }
-
-function xScale( lineValue ){
-	var chartPosition = 0;
-
-	return chartPosition;
-} 
