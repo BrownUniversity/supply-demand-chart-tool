@@ -1,3 +1,4 @@
+/*global Point, Path, Size, Rectangle, Layer, PointText, project, view*/
 
 // Colors
 var blues = [
@@ -13,9 +14,6 @@ var oranges = [
 ];
 
 // Chart settings
-var types = ["Supply", "Demand"];
-var numberOfLinesPerType = 2;
-
 var chartPosition = new Point(0, 0);
 var chartSize = new Size(380, 380);
 var chartBoundries = new Rectangle( chartPosition, chartSize);
@@ -87,8 +85,6 @@ var intersectionsLayer = createIntersectionLines( chartLinesLayer, chartBoundrie
 
 intersectionsLayer.insertBelow(axesLayer);
 
-console.log(chartLinesLayer);
-
 /**
  * Create and return a new layer and call constructor function to create new objects on that layer.
  * @param {*} layernName 
@@ -151,7 +147,7 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 function createChartLines( chartLines, chartBoundries ){
 	return constructOnNewLayer("chartLines", function () {
 		for(var i = 0; i < chartLines.length; i++) {
-			currentLine = chartLines[i];
+			var currentLine = chartLines[i];
 	
 			var startPoint = getChartPosition(0, currentLine.start, chartBoundries);
 			var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
@@ -167,7 +163,6 @@ function createChartLines( chartLines, chartBoundries ){
 function createChartLineLabels( chartLinesLayer, chartBoundries ) {
 	return constructOnNewLayer("chartLineLabels", function () {
 		var chartLines = chartLinesLayer.children;
-		bananaboat = 0;
 	});
 }
 
