@@ -25,28 +25,28 @@ var yAxisLabelText = "Quantity";
 //Supply and demand lines of chart 
 var chartLines = [
 	{
-		label: "Supply 1",
+		label: "S₀",
 		type: "supply",
 		start: 0.2,
 		end: 0.7,
 		color: oranges[0],
 	},
 	{
-		label: "Supply 2",
+		label: "S₁",
 		type: "supply",
 		start: 0.3,
 		end: 0.8,
 		color: oranges[1],
 	},
 	{
-		label: "Demand 1",
+		label: "D₀",
 		type: "demand",
 		start: 0.7,
 		end: 0.2,
 		color: blues[0],
 	},
 	{
-		label: "Demand 2",
+		label: "D₁",
 		type: "demand",
 		start: 0.8,
 		end: 0.3,
@@ -81,7 +81,7 @@ var axisLabelStyles = {
 
 var chartLineLabelStyles = {
 	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 18
+	fontSize: 24
 }
 
 var axesLayer = createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
@@ -90,6 +90,11 @@ var chartLineLabels = createChartLineLabels(chartLinesLayer);
 var intersectionsLayer = createIntersectionLines( chartLinesLayer, chartBoundries );
 
 intersectionsLayer.insertBelow(axesLayer);
+
+/* exported onMouseDrag */
+function onMouseDrag(event) {
+	
+}
 
 /**
  * Create and return a new layer and call constructor function to create new objects on that layer.
@@ -102,7 +107,6 @@ function constructOnNewLayer( layernName, constructor ){
 	newLayer.name = layernName;
 
 	constructor();
-
 	currentLayer.activate();
 	return newLayer;
 }
