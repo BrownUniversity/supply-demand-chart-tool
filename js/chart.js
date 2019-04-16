@@ -90,31 +90,42 @@ intersectionsLayer.insertBelow(axesLayer);
 console.log(chartLinesLayer);
 
 /**
- * Create charts axis given its boundries
- * @param {*} chartBoundries 
+ * Create and return a new layer and call constructor function to create new objects on that layer.
+ * @param {*} layernName 
+ * @param {*} constructor 
  */
-function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
-	var currentLayer = project.activeLayer
-	var axesLayer = new Layer();
-	axesLayer.name = "axes";
+function constructOnNewLayer( layernName, constructor ){
+	var currentLayer = project.activeLayer;
+	var newLayer = new Layer();
+	newLayer.name = layernName;
 
-	var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
-	leftAxis.style = axisLineStyles;
-
-	var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
-	bottomAxis.style = axisLineStyles;
-
-	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
+	constructor();
 
 	currentLayer.activate();
-	return axesLayer;
+	return newLayer;
+}
+
+/**
+ * Create layer with lines for charts axis 
+ * @param {Rectangle} chartBoundries 
+ */
+function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
+	return constructOnNewLayer("axes", function () {
+		var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
+		leftAxis.style = axisLineStyles;
+	
+		var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
+		bottomAxis.style = axisLineStyles;
+	
+		createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
+	});
 }
 
 /**
  * Create labels for chart axis
- * @param {*} xAxisLabelText 
- * @param {*} yAxisLabelText 
- * @param {*} chartBoundries 
+ * @param {String} xAxisLabelText 
+ * @param {String} yAxisLabelText 
+ * @param {Rectangle} chartBoundries 
  */
 function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomCenter);
@@ -138,24 +149,26 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
  * @param {*} chartBoundries 
  */
 function createChartLines( chartLines, chartBoundries ){
-	var currentLayer = project.activeLayer;
-	var chartLinesLayer = new Layer();
-	chartLinesLayer.name = "chartLines";
+	return constructOnNewLayer("chartLines", function () {
+		for(var i = 0; i < chartLines.length; i++) {
+			currentLine = chartLines[i];
+	
+			var startPoint = getChartPosition(0, currentLine.start, chartBoundries);
+			var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
+	
+			var linePath = new Path.Line(startPoint, endPoint);
+			linePath.style = chartLineStyle;
+			linePath.strokeColor = currentLine.color;
+			linePath.data = {label: currentLine.label, type: currentLine.type};
+		}
+	});
+}
 
-	for(var i = 0; i < chartLines.length; i++) {
-		currentLine = chartLines[i];
-
-		var startPoint = getChartPosition(0, currentLine.start, chartBoundries);
-		var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
-
-		var linePath = new Path.Line(startPoint, endPoint);
-		linePath.style = chartLineStyle;
-		linePath.strokeColor = currentLine.color;
-		linePath.data = {label: currentLine.label, type: currentLine.type};
-	}
-
-	currentLayer.activate();
-	return chartLinesLayer;
+function createChartLineLabels( chartLinesLayer, chartBoundries ) {
+	return constructOnNewLayer("chartLineLabels", function () {
+		var chartLines = chartLinesLayer.children;
+		bananaboat = 0;
+	});
 }
 
 /**
@@ -164,26 +177,21 @@ function createChartLines( chartLines, chartBoundries ){
  * @param {Rectangle} chartBoundries 
  */
 function createIntersectionLines( chartLinesLayer, chartBoundries ){
-	var currentLayer = project.activeLayer;
-	var intersectionsLayer = new Layer();
-	intersectionsLayer.name = "intersections"
+	return constructOnNewLayer("intersections", function () {
+		var chartLines = chartLinesLayer.children;
 
-	var chartLines = chartLinesLayer.children;
-
-	for( var i = 0; i < chartLines.length; i++){
-		for( var j = i + 1; j < chartLines.length; j++) {
-			if( chartLines[i].data.type != chartLines[j].data.type) {
-				var intersectionPoint = chartLines[i].getCrossings(chartLines[j])[0].point;
-				var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
-				var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
-				var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
-				intersection.style = intersectionLineStyle;
+		for( var i = 0; i < chartLines.length; i++){
+			for( var j = i + 1; j < chartLines.length; j++) {
+				if( chartLines[i].data.type != chartLines[j].data.type) {
+					var intersectionPoint = chartLines[i].getCrossings(chartLines[j])[0].point;
+					var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
+					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
+					var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
+					intersection.style = intersectionLineStyle;
+				}
 			}
 		}
-	}
-
-	currentLayer.activate();
-	return intersectionsLayer;
+	});
 }
 
 /**
