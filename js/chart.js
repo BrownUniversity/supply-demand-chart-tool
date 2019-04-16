@@ -110,9 +110,6 @@ var selectedSegment, selectedPath;
 
 /* exported onMouseDown */
 function onMouseDown(event){
-	selectedSegment = null;
-	selectedPath = null;
-
 	var hitResults = project.hitTest(event.point, hitOptions);
 
 	//If not hit results nothing to do
@@ -126,6 +123,8 @@ function onMouseDown(event){
 		selectedSegment = hitResults.segment;
 	} else if( hitResults.type == 'stroke' ) {
 		selectedSegment = null;
+	} else {
+		selectedPath = null;
 	}
 }
 
@@ -135,8 +134,14 @@ function onMouseDrag(event){
 		if(selectedSegment) {
 			selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
 		} else if(selectedPath) {
-			//TODO: Fix overshoot of ends of path 
-			selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+			
+			var topEdge = selectedPath.bounds.top + event.delta.y;
+			var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
+
+			//Check to make sure part of path doesn't extend beyond the chart area.
+			if( topEdge > chartBoundries.top && bottomEdge < chartBoundries.bottom){
+				selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+			}
 		}
 	}
 }
