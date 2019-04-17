@@ -101,10 +101,6 @@ createChartLineLabels(chartLinesLayer);
 intersectionsLayer.activate();
 createIntersectionLines( chartLinesLayer, chartBoundries );
 
-
-console.log(project.layers);
-
-
 // Options for selecting objects
 var hitOptions = {
 	segments: true,
@@ -251,12 +247,16 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
 
 	for( var i = 0; i < chartLines.length; i++){
 		for( var j = i + 1; j < chartLines.length; j++) {
+			//Only check for crossing between different types of lines
 			if( chartLines[i].data.type != chartLines[j].data.type) {
-				var intersectionPoint = chartLines[i].getCrossings(chartLines[j])[0].point;
-				var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
-				var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
-				var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
-				intersection.style = intersectionLineStyle;
+				var crossings = chartLines[i].getCrossings(chartLines[j]);
+				if( crossings.length > 0 ){
+					var intersectionPoint = crossings[0].point;
+					var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
+					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
+					var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
+					intersection.style = intersectionLineStyle;
+				}
 			}
 		}
 	}
