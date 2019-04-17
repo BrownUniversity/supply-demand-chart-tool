@@ -153,6 +153,9 @@ function onMouseDrag(event){
 		intersectionsLayer.removeChildren();
 		intersectionsLayer.activate();
 		createIntersectionLines( chartLinesLayer, chartBoundries );
+
+		//Update chart line labels
+		updateChartLineLabels( chartLinesLayer, chartLineLabelsLayer );
 	}
 }
 
@@ -226,14 +229,33 @@ function createChartLineLabels( chartLinesLayer ) {
 
 	for( var i = 0; i < chartLines.length; i++) {
 		var currentLine = chartLines[i];
-
 		var labelPosition = new Point(currentLine.lastSegment.point);
 		labelPosition.x += 10;
-		var label = new PointText( labelPosition );
-		label.style = chartLineLabelStyles;
-		label.content = currentLine.data.label;
-		label.fillColor = currentLine.strokeColor;
 
+		var label = new PointText( {
+			point: labelPosition,
+			name: currentLine.data.label,
+			fillColor: currentLine.strokeColor,
+			content: currentLine.data.label
+		} );
+
+		label.style = chartLineLabelStyles;
+	}
+}
+
+/**
+ * Update the position of chart line labels to match line position
+ * @param {Layer} chartLinesLayer 
+ * @param {Layer} chartLineLabelsLayer 
+ */
+function updateChartLineLabels( chartLinesLayer, chartLineLabelsLayer ){
+	var chartLines = chartLinesLayer.children;
+	var chartLinesLabels = chartLineLabelsLayer.children;
+	for( var i = 0; i < chartLines.length; i++) {
+		var currentLine = chartLines[i];
+		var labelPosition = new Point(currentLine.lastSegment.point);
+		labelPosition.x += 10;
+		chartLinesLabels[currentLine.data.label].point = labelPosition;
 	}
 }
 
