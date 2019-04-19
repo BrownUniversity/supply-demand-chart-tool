@@ -1,4 +1,5 @@
-/*global Point, Path, Size, Rectangle, Layer, PointText, project, view*/
+
+/*global Point, Path, Size, Rectangle, Layer, Group, PointText, project, view*/
 
 // Colors
 var blues = [
@@ -87,10 +88,17 @@ var chartLineLabelStyles = {
 	fontSize: 24
 }
 
+var buttonLabelStyles = {
+	fontFamily: "'Roboto', 'sans-serif'",
+	fontSize: 18,
+	fontWeight: "bold"
+}
+
 var intersectionsLayer = new Layer({name: "intersections"});
 var axesLayer = new Layer({name: "axes"});
 var chartLinesLayer = new Layer({name: "chartLines"});
 var chartLineLabelsLayer = new Layer({name: "chartLineLabels"});
+var uiLayer = new Layer({name: "ui"});
 
 axesLayer.activate();
 createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
@@ -100,6 +108,8 @@ chartLineLabelsLayer.activate();
 createChartLineLabels(chartLinesLayer);
 intersectionsLayer.activate();
 createIntersectionLines( chartLinesLayer, chartBoundries );
+uiLayer.activate();
+createChartLineButtons( chartLinesLayer );
 
 // Options for selecting objects
 var hitOptions = {
@@ -220,6 +230,7 @@ function createChartLines( chartLines, chartBoundries ){
 		var linePath = new Path.Line(startPoint, endPoint);
 		linePath.style = chartLineStyle;
 		linePath.strokeColor = currentLine.color;
+		linePath.name = currentLine.label;
 		linePath.data = {label: currentLine.label, type: currentLine.type};
 	}
 }
@@ -243,6 +254,50 @@ function createChartLineLabels( chartLinesLayer ) {
 	}
 }
 
+function createChartLineButtons( chartLinesLayer ) {
+	var chartLines = chartLinesLayer.children;
+
+	var buttons = new Group({name: "buttons"});
+
+	for( var i = 0; i < chartLines.length; i++) {
+		var currentLine = chartLines[i]
+		var xPosition = i * 80;
+
+		var button = new Group({name: currentLine.data.label + " group"})
+		button.data.chartline = currentLine;
+		
+		var rectangle = new Rectangle(new Point(0, 0), new Size(45, 30));
+		var cornerSize = new Size(10, 10);
+		var buttonBox = new Path.Rectangle(rectangle, cornerSize);
+		buttonBox.bounds.center.x = xPosition;
+		buttonBox.bounds.center.y = 0;
+		buttonBox.fillColor = currentLine.strokeColor;
+
+		button.addChild(buttonBox);
+
+		var label = new PointText( {
+			point: new Point( xPosition, 5),
+			name: currentLine.data.label,
+			fillColor: "white",
+			content: currentLine.data.label,
+			justification: "center"
+		} );
+		label.style = buttonLabelStyles;
+		
+		button.addChild(label);
+		button.onMouseDown = function (event) {
+			this.data.chartline.visible = !this.data.chartline.visible;
+			intersectionsLayer.removeChildren();
+			createIntersectionLines( chartLinesLayer, chartBoundries );
+		}
+
+		buttons.addChild(button);
+	}
+
+	buttons.position.x = view.center.x;
+	buttons.position.y = 25;
+}
+
 /**
  * Update the position of chart line labels to match line position
  * @param {Layer} chartLinesLayer 
@@ -254,8 +309,10 @@ function updateChartLineLabels( chartLinesLayer, chartLineLabelsLayer ){
 	for( var i = 0; i < chartLines.length; i++) {
 		var currentLine = chartLines[i];
 		var labelPosition = new Point(currentLine.lastSegment.point);
+		
 		labelPosition.x += 10;
 		chartLinesLabels[currentLine.data.label].point = labelPosition;
+		chartLinesLabels[currentLine.data.label].visible = currentLine.visible;
 	}
 }
 
@@ -272,7 +329,7 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
 			//Only check for crossing between different types of lines
 			if( chartLines[i].data.type != chartLines[j].data.type) {
 				var crossings = chartLines[i].getCrossings(chartLines[j]);
-				if( crossings.length > 0 ){
+				if( chartLines[i].visible && chartLines[j].visible && crossings.length > 0 ){
 					var intersectionPoint = crossings[0].point;
 					var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
 					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
