@@ -230,8 +230,21 @@ function createChartLines( chartLines, chartBoundries ){
 		var linePath = new Path.Line(startPoint, endPoint);
 		linePath.style = chartLineStyle;
 		linePath.strokeColor = currentLine.color;
-		linePath.name = currentLine.label;
-		linePath.data = {label: currentLine.label, type: currentLine.type};
+		linePath.name = "path";
+
+		linePath.data = {
+			label: currentLine.label, 
+			type: currentLine.type
+		};
+
+		var chartLineGroup = new Group({
+			name: currentLine.label
+		})
+
+		chartLineGroup.addChild(linePath);
+
+
+
 	}
 }
 
@@ -239,7 +252,7 @@ function createChartLineLabels( chartLinesLayer ) {
 	var chartLines = chartLinesLayer.children;
 
 	for( var i = 0; i < chartLines.length; i++) {
-		var currentLine = chartLines[i];
+		var currentLine = chartLines[i].children["path"];
 		var labelPosition = new Point(currentLine.lastSegment.point);
 		labelPosition.x += 10;
 
@@ -260,7 +273,7 @@ function createChartLineButtons( chartLinesLayer ) {
 	var buttons = new Group({name: "buttons"});
 
 	for( var i = 0; i < chartLines.length; i++) {
-		var currentLine = chartLines[i]
+		var currentLine = chartLines[i].children["path"];
 		var xPosition = i * 80;
 
 		var button = new Group({name: currentLine.data.label + " group"})
@@ -307,7 +320,7 @@ function updateChartLineLabels( chartLinesLayer, chartLineLabelsLayer ){
 	var chartLines = chartLinesLayer.children;
 	var chartLinesLabels = chartLineLabelsLayer.children;
 	for( var i = 0; i < chartLines.length; i++) {
-		var currentLine = chartLines[i];
+		var currentLine = chartLines[i].children["path"];
 		var labelPosition = new Point(currentLine.lastSegment.point);
 		
 		labelPosition.x += 10;
@@ -326,10 +339,13 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
 
 	for( var i = 0; i < chartLines.length; i++){
 		for( var j = i + 1; j < chartLines.length; j++) {
+			var lineA = chartLines[i].children["path"];
+			var lineB = chartLines[j].children["path"];
+
 			//Only check for crossing between different types of lines
-			if( chartLines[i].data.type != chartLines[j].data.type) {
-				var crossings = chartLines[i].getCrossings(chartLines[j]);
-				if( chartLines[i].visible && chartLines[j].visible && crossings.length > 0 ){
+			if( lineA.data.type != lineB.data.type) {
+				var crossings = lineA.getCrossings(lineB);
+				if( lineA.visible && lineB.visible && crossings.length > 0 ){
 					var intersectionPoint = crossings[0].point;
 					var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
 					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
