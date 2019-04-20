@@ -34,6 +34,7 @@ var chartLines = [
 		start: 0.2,
 		end: 0.7,
 		color: oranges[0],
+		visible: true
 	},
 	{
 		label: "S₁",
@@ -41,6 +42,7 @@ var chartLines = [
 		start: 0.3,
 		end: 0.8,
 		color: oranges[1],
+		visible: false
 	},
 	{
 		label: "D₀",
@@ -48,6 +50,7 @@ var chartLines = [
 		start: 0.7,
 		end: 0.2,
 		color: blues[0],
+		visible: true
 	},
 	{
 		label: "D₁",
@@ -55,6 +58,7 @@ var chartLines = [
 		start: 0.8,
 		end: 0.3,
 		color: blues[1],
+		visible: false
 	}
 ];
 
@@ -116,7 +120,7 @@ var hitOptions = {
 	segments: true,
 	stroke: true,
 	fill: false,
-	tolerance: 3,
+	tolerance: 5,
 	match: function (hitResults) {
 		return hitResults.item.layer == chartLinesLayer;
 	}
@@ -175,7 +179,7 @@ function onMouseDrag(event){
 	}
 }
 
-/* exported onMouseDrag */
+/* exported onMouseUp */
 function onMouseUp(event){
 	selectedSegment = null;
 	selectedPath = null;
@@ -268,6 +272,8 @@ function createChartLines( chartLines, chartBoundries ){
 			label: currentLine.label,
 			type: currentLine.type
 		}
+
+		chartLineGroup.visible = currentLine.visible;
 	}
 }
 
@@ -282,13 +288,22 @@ function createChartLineButtons( chartLinesLayer ) {
 
 		var button = new Group({name: currentLine.data.label + " group"})
 		button.data.chartline = currentLine;
+		button.data.color = chartLines[i].data.color;
+		
 		
 		var rectangle = new Rectangle(new Point(0, 0), new Size(45, 30));
 		var cornerSize = new Size(10, 10);
 		var buttonBox = new Path.Rectangle(rectangle, cornerSize);
 		buttonBox.bounds.center.x = xPosition;
 		buttonBox.bounds.center.y = 0;
-		buttonBox.fillColor = chartLines[i].data.color;
+		buttonBox.name = "background";
+
+		if(currentLine.visible) {
+			buttonBox.fillColor = chartLines[i].data.color;
+		} else {
+			buttonBox.fillColor = "#cccccc";
+		}
+		
 
 		button.addChild(buttonBox);
 
@@ -301,14 +316,24 @@ function createChartLineButtons( chartLinesLayer ) {
 		} );
 		label.style = buttonLabelStyles;
 		
+		button.onMouseDown = toggleButton;
 		button.addChild(label);
-		button.onMouseDown = function (event) {
-			this.data.chartline.visible = !this.data.chartline.visible;
-			intersectionsLayer.removeChildren();
-			createIntersectionLines( chartLinesLayer, chartBoundries );
+
+		
+		
+		buttons.addChild(button);
+	}
+
+	function toggleButton(event) {
+		this.data.chartline.visible = !this.data.chartline.visible;
+		if(this.data.chartline.visible) {
+			this.children["background"].fillColor = this.data.color;
+		} else {
+			this.children["background"].fillColor = "#cccccc";
 		}
 
-		buttons.addChild(button);
+		intersectionsLayer.removeChildren();
+		createIntersectionLines( chartLinesLayer, chartBoundries );
 	}
 
 	buttons.position.x = view.center.x;
