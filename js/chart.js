@@ -347,7 +347,6 @@ function createChartLineButtons( chartLinesLayer ) {
  * @param {Rectangle} chartBoundries 
  */
 function createIntersectionLines( chartLinesLayer, chartBoundries ){
-	console.log(chartLinesLayer.children.length);
 	var chartLines = chartLinesLayer.children;
 
 	for( var i = 0; i < chartLines.length; i++){
