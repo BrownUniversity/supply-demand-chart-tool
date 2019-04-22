@@ -23,8 +23,8 @@ chartBoundries.center = view.center;
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
 
-var xAxisLabelText = "Price";
-var yAxisLabelText = "Quantity";
+var xAxisLabelText = "Quantity";
+var yAxisLabelText = "Price";
 
 //Supply and demand lines of chart 
 var chartLines = [
