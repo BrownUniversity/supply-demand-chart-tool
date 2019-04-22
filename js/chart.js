@@ -1,4 +1,3 @@
-
 /*global Point, Path, Size, Rectangle, Layer, Group, PointText, project, view*/
 
 // Colors
@@ -14,11 +13,17 @@ var oranges = [
 	"#fdbe85",
 ];
 
+// Canvas settings
+var margin = 15;
+var safeBox = new Rectangle( view.bounds );
+safeBox.width -= margin * 2;
+safeBox.height-= margin * 2;
+safeBox.center = view.center;
+
 // Chart settings
-var chartPosition = new Point(0, 0);
-var chartSize = new Size(380, 380);
-var chartBoundries = new Rectangle( chartPosition, chartSize);
-chartBoundries.center = view.center;
+var chartSize = new Size(390, 390);
+var chartBoundries = new Rectangle( new Point(0, 0), chartSize);
+chartBoundries.topCenter = safeBox.topCenter;
 
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
@@ -84,7 +89,7 @@ var axisLineStyles = {
 var axisLabelStyles = {
 	color: "black",
 	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 20
+	fontSize: 18
 }
 
 var chartLineLabelStyles = {
@@ -94,7 +99,7 @@ var chartLineLabelStyles = {
 
 var buttonLabelStyles = {
 	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 18,
+	fontSize: 16,
 	fontWeight: "bold"
 }
 
@@ -180,7 +185,7 @@ function onMouseDrag(event){
 }
 
 /* exported onMouseUp */
-function onMouseUp(event){
+function onMouseUp(){
 	selectedSegment = null;
 	selectedPath = null;
 }
@@ -217,14 +222,14 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
  */
 function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomCenter);
-	xLabelPosition.y += 30;
+	xLabelPosition.y += 50;
 	var xAxisLabel = new PointText( xLabelPosition );
 	xAxisLabel.style = axisLabelStyles;
 	xAxisLabel.justification = "center";
 	xAxisLabel.content = xAxisLabelText;
 
 	var yLabelPosition = new Point(chartBoundries.leftCenter);
-	yLabelPosition.x -= 10;
+	yLabelPosition.x -= 60;
 	var yAxisLabel = new PointText( yLabelPosition );
 	yAxisLabel.style = axisLabelStyles;
 	yAxisLabel.justification = "right";
@@ -279,23 +284,24 @@ function createChartLines( chartLines, chartBoundries ){
 
 function createChartLineButtons( chartLinesLayer ) {
 	var chartLines = chartLinesLayer.children;
+	var buttonSize = new Size(40, 25);
+	var buttonSpacing = 10;
 
 	var buttons = new Group({name: "buttons"});
 
 	for( var i = 0; i < chartLines.length; i++) {
 		var currentLine = chartLines[i];
-		var xPosition = i * 80;
+		var buttonPosition = new Point( 0, i * (buttonSize.height + buttonSpacing) );
+		
 
 		var button = new Group({name: currentLine.data.label + " group"})
 		button.data.chartline = currentLine;
 		button.data.color = chartLines[i].data.color;
 		
-		
-		var rectangle = new Rectangle(new Point(0, 0), new Size(45, 30));
+		var rectangle = new Rectangle(new Point(0, 0), buttonSize);
 		var cornerSize = new Size(10, 10);
 		var buttonBox = new Path.Rectangle(rectangle, cornerSize);
-		buttonBox.bounds.center.x = xPosition;
-		buttonBox.bounds.center.y = 0;
+		buttonBox.position = buttonPosition;
 		buttonBox.name = "background";
 
 		if(currentLine.visible) {
@@ -304,41 +310,37 @@ function createChartLineButtons( chartLinesLayer ) {
 			buttonBox.fillColor = "#cccccc";
 		}
 		
-
 		button.addChild(buttonBox);
 
 		var label = new PointText( {
-			point: new Point( xPosition, 5),
+			point: buttonPosition,
 			name: currentLine.data.label,
 			fillColor: "white",
 			content: currentLine.data.label,
 			justification: "center"
 		} );
 		label.style = buttonLabelStyles;
+		label.position.y += 5;  //Centers text vertically in box
 		
-		button.onMouseDown = toggleButton;
-		button.addChild(label);
+		button.onMouseDown = function () {
+			this.data.chartline.visible = !this.data.chartline.visible;
+			if(this.data.chartline.visible) {
+				this.children["background"].fillColor = this.data.color;
+			} else {
+				this.children["background"].fillColor = "#cccccc";
+			}
+	
+			intersectionsLayer.removeChildren();
+			intersectionsLayer.activate();
+			createIntersectionLines( chartLinesLayer, chartBoundries );
+		};
 
-		
-		
+		button.addChild(label);	
 		buttons.addChild(button);
 	}
 
-	function toggleButton(event) {
-		this.data.chartline.visible = !this.data.chartline.visible;
-		if(this.data.chartline.visible) {
-			this.children["background"].fillColor = this.data.color;
-		} else {
-			this.children["background"].fillColor = "#cccccc";
-		}
-
-		intersectionsLayer.removeChildren();
-		intersectionsLayer.activate();
-		createIntersectionLines( chartLinesLayer, chartBoundries );
-	}
-
-	buttons.position.x = view.center.x;
-	buttons.position.y = 25;
+	buttons.pivot = buttons.bounds.topRight;
+	buttons.position = safeBox.topRight;
 }
 
 /**
