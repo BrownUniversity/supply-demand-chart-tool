@@ -14,14 +14,17 @@ var oranges = [
 ];
 
 // Canvas settings
-var margin = 15;
+var margin = 25;
+var xAxisLabelMargin = 75;
 var safeBox = new Rectangle( view.bounds );
 safeBox.width -= margin * 2;
 safeBox.height-= margin * 2;
 safeBox.center = view.center;
 
+var chartDimension = Math.min(safeBox.width, safeBox.height) - xAxisLabelMargin;
+
 // Chart settings
-var chartSize = new Size(390, 390);
+var chartSize = new Size(chartDimension, chartDimension);
 var chartBoundries = new Rectangle( new Point(0, 0), chartSize);
 chartBoundries.topCenter = safeBox.topCenter;
 
@@ -70,36 +73,36 @@ var chartLines = [
 // Styles
 
 var chartLineStyle = {
-	strokeWidth: 6,
+	strokeWidth: 8,
 	strokeCap: "round"	
 };
 
 var intersectionLineStyle = {
 	strokeColor: "#bbbbbb",
-	strokeWidth: 2,
+	strokeWidth: 4,
 	strokeCap: "butt",
 	dashArray: [3, 3]
 }
 
 var axisLineStyles = {
 	strokeColor: "black",
-	strokeWidth: 1,
+	strokeWidth: 2,
 }
 
 var axisLabelStyles = {
 	color: "black",
 	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 18
+	fontSize: 28
 }
 
 var chartLineLabelStyles = {
 	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 24
+	fontSize: 36
 }
 
 var buttonLabelStyles = {
 	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 16,
+	fontSize: 20,
 	fontWeight: "bold"
 }
 
@@ -222,7 +225,7 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
  */
 function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomRight);
-	xLabelPosition.y += 50;
+	xLabelPosition.y += 64;
 	var xAxisLabel = new PointText( xLabelPosition );
 	xAxisLabel.style = axisLabelStyles;
 	xAxisLabel.justification = "right";
@@ -230,7 +233,7 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 
 	var yLabelPosition = new Point(chartBoundries.topLeft);
 	yLabelPosition.x -= 50;
-	yLabelPosition.y += 18;
+	yLabelPosition.y += axisLabelStyles.fontSize;
 	var yAxisLabel = new PointText( yLabelPosition );
 	yAxisLabel.style = axisLabelStyles;
 	yAxisLabel.justification = "right";
@@ -285,7 +288,7 @@ function createChartLines( chartLines, chartBoundries ){
 
 function createChartLineButtons( chartLinesLayer ) {
 	var chartLines = chartLinesLayer.children;
-	var buttonSize = new Size(40, 25);
+	var buttonSize = new Size(50, 32);
 	var buttonSpacing = 10;
 
 	var buttons = new Group({name: "buttons"});
