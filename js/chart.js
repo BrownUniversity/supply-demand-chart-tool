@@ -81,7 +81,7 @@ var intersectionLineStyle = {
 	strokeColor: "#bbbbbb",
 	strokeWidth: 4,
 	strokeCap: "butt",
-	dashArray: [3, 3]
+	dashArray: [8, 6]
 }
 
 var axisLineStyles = {
