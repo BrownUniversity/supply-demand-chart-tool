@@ -221,15 +221,16 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
  * @param {Rectangle} chartBoundries 
  */
 function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
-	var xLabelPosition = new Point(chartBoundries.bottomCenter);
+	var xLabelPosition = new Point(chartBoundries.bottomRight);
 	xLabelPosition.y += 50;
 	var xAxisLabel = new PointText( xLabelPosition );
 	xAxisLabel.style = axisLabelStyles;
-	xAxisLabel.justification = "center";
+	xAxisLabel.justification = "right";
 	xAxisLabel.content = xAxisLabelText;
 
-	var yLabelPosition = new Point(chartBoundries.leftCenter);
-	yLabelPosition.x -= 60;
+	var yLabelPosition = new Point(chartBoundries.topLeft);
+	yLabelPosition.x -= 50;
+	yLabelPosition.y += 18;
 	var yAxisLabel = new PointText( yLabelPosition );
 	yAxisLabel.style = axisLabelStyles;
 	yAxisLabel.justification = "right";
