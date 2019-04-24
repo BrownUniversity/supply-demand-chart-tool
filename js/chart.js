@@ -46,7 +46,7 @@ var chartLines = [
 		type: "supply",
 		start: 0.3,
 		end: 0.8,
-		color: oranges[1],
+		color: oranges[2],
 		visible: false
 	},
 	{
@@ -62,7 +62,7 @@ var chartLines = [
 		type: "demand",
 		start: 0.8,
 		end: 0.3,
-		color: blues[1],
+		color: blues[2],
 		visible: false
 	}
 ];
