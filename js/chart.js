@@ -15,27 +15,12 @@ var oranges = [
 
 // Canvas settings
 var margin = 25;
-var xAxisLabelMargin = 75;
-var safeBox = new Rectangle( view.bounds );
-safeBox.width -= margin * 2;
-safeBox.height-= margin * 2;
-safeBox.center = view.center;
-
-var chartDimension = Math.min(safeBox.width, safeBox.height) - xAxisLabelMargin;
-
-// Chart settings
-var chartSize = new Size(chartDimension, chartDimension);
-var chartBoundries = new Rectangle( new Point(0, 0), chartSize);
-chartBoundries.topCenter = safeBox.topCenter;
-
-//Area to register boundaries of dragging of chart lines
-var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
 
 var xAxisLabelText = "Quantity";
 var yAxisLabelText = "Price";
 
 //Supply and demand lines of chart 
-var chartLines = [
+var chartLineData = [
 	{
 		label: "S₀",
 		type: "supply",
@@ -106,22 +91,13 @@ var buttonLabelStyles = {
 	fontWeight: "bold"
 }
 
-var intersectionsLayer = new Layer({name: "intersections"});
-var axesLayer = new Layer({name: "axes"});
-var chartLinesLayer = new Layer({name: "chartLines"});
-var chartLineLabelsLayer = new Layer({name: "chartLineLabels"});
-var uiLayer = new Layer({name: "ui"});
+//Create the charts
+var safeBox = createSafeBoxDimensions( view.bounds, margin );
+var chartBoundries = createChartDimensions(safeBox);
+createChart(project, chartLineData, chartBoundries);
 
-axesLayer.activate();
-createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
-chartLinesLayer.activate();
-createChartLines( chartLines, chartBoundries );
-chartLineLabelsLayer.activate();
-// createChartLineLabels(chartLinesLayer);
-intersectionsLayer.activate();
-createIntersectionLines( chartLinesLayer, chartBoundries );
-uiLayer.activate();
-createChartLineButtons( chartLinesLayer );
+//Area to register boundaries of dragging of chart lines
+var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
 
 // Options for selecting objects
 var hitOptions = {
@@ -130,7 +106,7 @@ var hitOptions = {
 	fill: false,
 	tolerance: 5,
 	match: function (hitResults) {
-		return hitResults.item.layer == chartLinesLayer;
+		return hitResults.item.layer == project.layers["chartLines"];
 	}
 };
 
@@ -159,31 +135,30 @@ function onMouseDown(event){
 /* exported onMouseDrag */
 function onMouseDrag(event){
 	if( event.point.isInside(dragBoundries) ) {
-		if(selectedSegment) {
-			selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
-		} else if(selectedPath) {
-			var topEdge = selectedPath.bounds.top + event.delta.y;
-			var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
-
-			//Check to make sure part of path doesn't extend beyond the chart area.
-			if( topEdge > chartBoundries.top && bottomEdge < chartBoundries.bottom){
-				selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+		if( selectedPath ) {
+			if(selectedSegment) {
+				selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+			} else {
+				var topEdge = selectedPath.bounds.top + event.delta.y;
+				var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
+	
+				//Check to make sure part of path doesn't extend beyond the chart area.
+				if( topEdge > chartBoundries.top && bottomEdge < chartBoundries.bottom){
+					selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+				}
 			}
-		}
 
-		if( selectedPath){
-			var labelForSelectedPath = selectedPath.parent.children["label"];
-			labelForSelectedPath.point.y = selectedPath.lastSegment.point.y;
-		}
-		
+			var parentGroup = selectedPath.parent;
+			parentGroup.children["label"].point.y = selectedPath.lastSegment.point.y;
+			
+			parentGroup.data.start = getUnitPosition( selectedPath.firstSegment.point, chartBoundries ).y;
+			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
+		}	
 
 		//Remove and recreate intersections 
-		intersectionsLayer.removeChildren();
-		intersectionsLayer.activate();
-		createIntersectionLines( chartLinesLayer, chartBoundries );
-
-		//Update chart line labels
-		// updateChartLineLabels( chartLinesLayer, chartLineLabelsLayer );
+		project.layers["intersections"].removeChildren();
+		project.layers["intersections"].activate();
+		createIntersectionLines( project.layers["chartLines"], chartBoundries );
 	}
 }
 
@@ -191,6 +166,18 @@ function onMouseDrag(event){
 function onMouseUp(){
 	selectedSegment = null;
 	selectedPath = null;
+}
+
+/* exported onResize */
+function onResize(){
+	safeBox = createSafeBoxDimensions( view.bounds, margin );
+	chartBoundries = createChartDimensions(safeBox);
+
+	var data = project.layers["chartLines"].children.map( function (chartLineGroup) {
+		return chartLineGroup.data;
+	});
+
+	updateChart(project, data, chartBoundries);
 }
 
 /**
@@ -201,6 +188,84 @@ function onMouseUp(){
  */
 function constrain(value, min, max) {
 	return Math.min(Math.max(value, min), max);
+}
+
+/**
+ * Create box to contain
+ * @param {*} containerRectangle 
+ * @param {*} margin 
+ */
+function createSafeBoxDimensions(containerBounds, margin){
+	var safeBox = new Rectangle( containerBounds );
+	safeBox.width -= margin * 2;
+	safeBox.height-= margin * 2;
+	safeBox.center = view.center;
+
+	return safeBox;
+}
+
+/**
+ * Create chart dimensions based on a container rectangle and a margin to offset from that rectagle
+ * @param {*} containerBounds 
+ * @param {*} margin 
+ */
+function createChartDimensions(containerBounds) {
+	var xAxisLabelMargin = 75;
+	
+	var chartDimension = Math.min(containerBounds.width, containerBounds.height) - xAxisLabelMargin;
+	
+	// Chart settings
+	var chartSize = new Size(chartDimension, chartDimension);
+	var chartBoundries = new Rectangle( new Point(0, 0), chartSize);
+	chartBoundries.topCenter = containerBounds.topCenter;
+
+	return chartBoundries;
+}
+
+
+/**
+ * Create the chart and its elements.
+ * @param {*} project 
+ * @param {*} chartLineData 
+ * @param {*} chartBoundries 
+ */
+function createChart( project, chartLineData, chartBoundries) {
+	project.addLayer(new Layer({name: "intersections"}));
+	project.addLayer(new Layer({name: "axes"}));
+	project.addLayer(new Layer({name: "chartLines"}));
+	project.addLayer(new Layer({name: "ui"}));
+
+	updateChart(project, chartLineData, chartBoundries);
+
+	return project;
+}
+
+/**
+ * Update chart to match new data, size, etc.
+ * @param {*} project 
+ * @param {*} chartLineData 
+ * @param {*} chartBoundries 
+ */
+function updateChart( project, chartLineData, chartBoundries ){
+	//Remove exiting axes and create new ones
+	project.layers["axes"].removeChildren();
+	project.layers["axes"].activate();
+	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
+
+	//Remove existing chart lines and create new ones
+	project.layers["chartLines"].removeChildren();
+	project.layers["chartLines"].activate();
+	createChartLines( chartLineData, chartBoundries );
+
+	//Remove existing intersections and create new ones 
+	project.layers["intersections"].removeChildren();
+	project.layers["intersections"].activate();
+	createIntersectionLines( project.layers["chartLines"], chartBoundries );
+
+	//Remove existing ui and create new ones
+	project.layers["ui"].removeChildren();
+	project.layers["ui"].activate();
+	createChartLineButtons( project.layers["chartLines"] );
 }
 
 /**
@@ -242,15 +307,15 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 
 /**
  * Create the lines of the chart
- * @param {*} chartLines 
+ * @param {*} chartLineData 
  * @param {*} chartBoundries 
  */
-function createChartLines( chartLines, chartBoundries ){
-	for(var i = 0; i < chartLines.length; i++) {
-		var currentLine = chartLines[i];
+function createChartLines( chartLineData, chartBoundries ){
+	for(var i = 0; i < chartLineData.length; i++) {
+		var lineData = chartLineData[i];
 
-		var startPoint = getChartPosition(0, currentLine.start, chartBoundries);
-		var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
+		var startPoint = getChartPosition(0, lineData.start, chartBoundries);
+		var endPoint = getChartPosition(1.0, lineData.end, chartBoundries);
 
 		//Create new label
 		var labelPosition = new Point(endPoint);
@@ -259,30 +324,23 @@ function createChartLines( chartLines, chartBoundries ){
 		var label = new PointText( {
 			point: labelPosition,
 			name: "label",
-			fillColor: currentLine.color,
-			content: currentLine.label,
+			fillColor: lineData.color,
+			content: lineData.label,
 			style: chartLineLabelStyles
 		} );
 
 		//Create new path
 		var linePath = new Path.Line(startPoint, endPoint);
 		linePath.style = chartLineStyle;
-		linePath.strokeColor = currentLine.color;
+		linePath.strokeColor = lineData.color;
 		linePath.name = "path";
-		linePath.data = {
-			type: currentLine.type
-		};
 
 		//Create new group
 		var chartLineGroup = new Group([ linePath, label ])
-		chartLineGroup.name = currentLine.label;
-		chartLineGroup.data = {
-			color: currentLine.color,
-			label: currentLine.label,
-			type: currentLine.type
-		}
+		chartLineGroup.name = lineData.label;
+		chartLineGroup.data = lineData;
 
-		chartLineGroup.visible = currentLine.visible;
+		chartLineGroup.visible = lineData.visible;
 	}
 }
 
@@ -328,14 +386,15 @@ function createChartLineButtons( chartLinesLayer ) {
 		
 		button.onMouseDown = function () {
 			this.data.chartline.visible = !this.data.chartline.visible;
+			this.data.chartline.data.visible = this.data.chartline.visible;
 			if(this.data.chartline.visible) {
 				this.children["background"].fillColor = this.data.color;
 			} else {
 				this.children["background"].fillColor = "#cccccc";
 			}
 	
-			intersectionsLayer.removeChildren();
-			intersectionsLayer.activate();
+			project.layers["intersections"].removeChildren();
+			project.layers["intersections"].activate();
 			createIntersectionLines( chartLinesLayer, chartBoundries );
 		};
 

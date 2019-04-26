@@ -2,10 +2,8 @@
 <html>
 <head>
 	<meta charset="UTF-8">
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.min.js"></script>
-	<script type="text/paperscript" canvas="chart-canvas" src="js/chart.js" async="async"></script>
 	<style>
-	body { 
+	html, body { 
 		width: 100%;
 		height: 100%;
 		margin: 0;
@@ -25,14 +23,18 @@
 		height: 100%;
 	}
 	</style>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.0/paper-full.min.js"></script>
+	
 </head>
 
 <body lang="en">
 	<main>
-		<canvas id="chart-canvas">
+		<canvas id="chart-canvas" resize="true">
 			<p>Chart show relationship between supply in demand.</p>
 		</canvas>
 	</main>
+
+	<script type="text/paperscript" canvas="chart-canvas" src="js/chart.js" async="async"></script>
 </body>
 
 </html>
