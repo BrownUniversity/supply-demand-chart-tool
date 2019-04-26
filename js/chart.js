@@ -15,21 +15,6 @@ var oranges = [
 
 // Canvas settings
 var margin = 25;
-var xAxisLabelMargin = 75;
-var safeBox = new Rectangle( view.bounds );
-safeBox.width -= margin * 2;
-safeBox.height-= margin * 2;
-safeBox.center = view.center;
-
-var chartDimension = Math.min(safeBox.width, safeBox.height) - xAxisLabelMargin;
-
-// Chart settings
-var chartSize = new Size(chartDimension, chartDimension);
-var chartBoundries = new Rectangle( new Point(0, 0), chartSize);
-chartBoundries.topCenter = safeBox.topCenter;
-
-//Area to register boundaries of dragging of chart lines
-var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
 
 var xAxisLabelText = "Quantity";
 var yAxisLabelText = "Price";
@@ -107,7 +92,12 @@ var buttonLabelStyles = {
 }
 
 //Create the charts
+var safeBox = createSafeBoxDimensions( view.bounds, margin );
+var chartBoundries = createChartDimensions(safeBox);
 createChart(project, chartLineData, chartBoundries);
+
+//Area to register boundaries of dragging of chart lines
+var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
 
 // Options for selecting objects
 var hitOptions = {
@@ -178,6 +168,18 @@ function onMouseUp(){
 	selectedPath = null;
 }
 
+/* exported onResize */
+function onResize(){
+	safeBox = createSafeBoxDimensions( view.bounds, margin );
+	chartBoundries = createChartDimensions(safeBox);
+
+	var data = project.layers["chartLines"].children.map( function (chartLineGroup) {
+		return chartLineGroup.data;
+	});
+
+	updateChart(project, data, chartBoundries);
+}
+
 /**
  * Constrain a given value between a maximum and minimum value
  * @param {Number} value 
@@ -187,6 +189,39 @@ function onMouseUp(){
 function constrain(value, min, max) {
 	return Math.min(Math.max(value, min), max);
 }
+
+/**
+ * Create box to contain
+ * @param {*} containerRectangle 
+ * @param {*} margin 
+ */
+function createSafeBoxDimensions(containerBounds, margin){
+	var safeBox = new Rectangle( containerBounds );
+	safeBox.width -= margin * 2;
+	safeBox.height-= margin * 2;
+	safeBox.center = view.center;
+
+	return safeBox;
+}
+
+/**
+ * Create chart dimensions based on a container rectangle and a margin to offset from that rectagle
+ * @param {*} containerBounds 
+ * @param {*} margin 
+ */
+function createChartDimensions(containerBounds) {
+	var xAxisLabelMargin = 75;
+	
+	var chartDimension = Math.min(containerBounds.width, containerBounds.height) - xAxisLabelMargin;
+	
+	// Chart settings
+	var chartSize = new Size(chartDimension, chartDimension);
+	var chartBoundries = new Rectangle( new Point(0, 0), chartSize);
+	chartBoundries.topCenter = containerBounds.topCenter;
+
+	return chartBoundries;
+}
+
 
 /**
  * Create the chart and its elements.
@@ -226,11 +261,12 @@ function updateChart( project, chartLineData, chartBoundries ){
 	project.layers["intersections"].removeChildren();
 	project.layers["intersections"].activate();
 	createIntersectionLines( project.layers["chartLines"], chartBoundries );
+
+	//Remove existing ui and create new ones
+	project.layers["ui"].removeChildren();
 	project.layers["ui"].activate();
 	createChartLineButtons( project.layers["chartLines"] );
 }
-
-
 
 /**
  * Create layer with lines for charts axis 
@@ -350,6 +386,7 @@ function createChartLineButtons( chartLinesLayer ) {
 		
 		button.onMouseDown = function () {
 			this.data.chartline.visible = !this.data.chartline.visible;
+			this.data.chartline.data.visible = this.data.chartline.visible;
 			if(this.data.chartline.visible) {
 				this.children["background"].fillColor = this.data.color;
 			} else {
