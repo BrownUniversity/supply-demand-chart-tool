@@ -106,7 +106,8 @@ var buttonLabelStyles = {
 	fontWeight: "bold"
 }
 
-createChart(project);
+//Create the charts
+createChart(project, chartLineData, chartBoundries);
 
 // Options for selecting objects
 var hitOptions = {
@@ -189,24 +190,47 @@ function constrain(value, min, max) {
 
 /**
  * Create the chart and its elements.
+ * @param {*} project 
+ * @param {*} chartLineData 
+ * @param {*} chartBoundries 
  */
-function createChart( project ) {
+function createChart( project, chartLineData, chartBoundries) {
 	project.addLayer(new Layer({name: "intersections"}));
 	project.addLayer(new Layer({name: "axes"}));
 	project.addLayer(new Layer({name: "chartLines"}));
 	project.addLayer(new Layer({name: "ui"}));
 
+	updateChart(project, chartLineData, chartBoundries);
+
+	return project;
+}
+
+/**
+ * Update chart to match new data, size, etc.
+ * @param {*} project 
+ * @param {*} chartLineData 
+ * @param {*} chartBoundries 
+ */
+function updateChart( project, chartLineData, chartBoundries ){
+	//Remove exiting axes and create new ones
+	project.layers["axes"].removeChildren();
 	project.layers["axes"].activate();
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
+
+	//Remove existing chart lines and create new ones
+	project.layers["chartLines"].removeChildren();
 	project.layers["chartLines"].activate();
 	createChartLines( chartLineData, chartBoundries );
+
+	//Remove existing intersections and create new ones 
+	project.layers["intersections"].removeChildren();
 	project.layers["intersections"].activate();
 	createIntersectionLines( project.layers["chartLines"], chartBoundries );
 	project.layers["ui"].activate();
 	createChartLineButtons( project.layers["chartLines"] );
-
-	return project;
 }
+
+
 
 /**
  * Create layer with lines for charts axis 
