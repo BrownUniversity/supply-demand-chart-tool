@@ -35,7 +35,7 @@ var xAxisLabelText = "Quantity";
 var yAxisLabelText = "Price";
 
 //Supply and demand lines of chart 
-var chartLines = [
+var chartLineData = [
 	{
 		label: "S₀",
 		type: "supply",
@@ -115,7 +115,7 @@ var uiLayer = new Layer({name: "ui"});
 axesLayer.activate();
 createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 chartLinesLayer.activate();
-createChartLines( chartLines, chartBoundries );
+createChartLines( chartLineData, chartBoundries );
 chartLineLabelsLayer.activate();
 // createChartLineLabels(chartLinesLayer);
 intersectionsLayer.activate();
@@ -242,15 +242,15 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 
 /**
  * Create the lines of the chart
- * @param {*} chartLines 
+ * @param {*} chartLineData 
  * @param {*} chartBoundries 
  */
-function createChartLines( chartLines, chartBoundries ){
-	for(var i = 0; i < chartLines.length; i++) {
-		var currentLine = chartLines[i];
+function createChartLines( chartLineData, chartBoundries ){
+	for(var i = 0; i < chartLineData.length; i++) {
+		var lineData = chartLineData[i];
 
-		var startPoint = getChartPosition(0, currentLine.start, chartBoundries);
-		var endPoint = getChartPosition(1.0, currentLine.end, chartBoundries);
+		var startPoint = getChartPosition(0, lineData.start, chartBoundries);
+		var endPoint = getChartPosition(1.0, lineData.end, chartBoundries);
 
 		//Create new label
 		var labelPosition = new Point(endPoint);
@@ -259,30 +259,23 @@ function createChartLines( chartLines, chartBoundries ){
 		var label = new PointText( {
 			point: labelPosition,
 			name: "label",
-			fillColor: currentLine.color,
-			content: currentLine.label,
+			fillColor: lineData.color,
+			content: lineData.label,
 			style: chartLineLabelStyles
 		} );
 
 		//Create new path
 		var linePath = new Path.Line(startPoint, endPoint);
 		linePath.style = chartLineStyle;
-		linePath.strokeColor = currentLine.color;
+		linePath.strokeColor = lineData.color;
 		linePath.name = "path";
-		linePath.data = {
-			type: currentLine.type
-		};
 
 		//Create new group
 		var chartLineGroup = new Group([ linePath, label ])
-		chartLineGroup.name = currentLine.label;
-		chartLineGroup.data = {
-			color: currentLine.color,
-			label: currentLine.label,
-			type: currentLine.type
-		}
+		chartLineGroup.name = lineData.label;
+		chartLineGroup.data = lineData;
 
-		chartLineGroup.visible = currentLine.visible;
+		chartLineGroup.visible = lineData.visible;
 	}
 }
 
