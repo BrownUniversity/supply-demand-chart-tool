@@ -106,22 +106,7 @@ var buttonLabelStyles = {
 	fontWeight: "bold"
 }
 
-var intersectionsLayer = new Layer({name: "intersections"});
-var axesLayer = new Layer({name: "axes"});
-var chartLinesLayer = new Layer({name: "chartLines"});
-var chartLineLabelsLayer = new Layer({name: "chartLineLabels"});
-var uiLayer = new Layer({name: "ui"});
-
-axesLayer.activate();
-createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
-chartLinesLayer.activate();
-createChartLines( chartLineData, chartBoundries );
-chartLineLabelsLayer.activate();
-// createChartLineLabels(chartLinesLayer);
-intersectionsLayer.activate();
-createIntersectionLines( chartLinesLayer, chartBoundries );
-uiLayer.activate();
-createChartLineButtons( chartLinesLayer );
+createChart(project);
 
 // Options for selecting objects
 var hitOptions = {
@@ -130,7 +115,7 @@ var hitOptions = {
 	fill: false,
 	tolerance: 5,
 	match: function (hitResults) {
-		return hitResults.item.layer == chartLinesLayer;
+		return hitResults.item.layer == project.layers["chartLines"];
 	}
 };
 
@@ -159,31 +144,30 @@ function onMouseDown(event){
 /* exported onMouseDrag */
 function onMouseDrag(event){
 	if( event.point.isInside(dragBoundries) ) {
-		if(selectedSegment) {
-			selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
-		} else if(selectedPath) {
-			var topEdge = selectedPath.bounds.top + event.delta.y;
-			var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
-
-			//Check to make sure part of path doesn't extend beyond the chart area.
-			if( topEdge > chartBoundries.top && bottomEdge < chartBoundries.bottom){
-				selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+		if( selectedPath ) {
+			if(selectedSegment) {
+				selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+			} else {
+				var topEdge = selectedPath.bounds.top + event.delta.y;
+				var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
+	
+				//Check to make sure part of path doesn't extend beyond the chart area.
+				if( topEdge > chartBoundries.top && bottomEdge < chartBoundries.bottom){
+					selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
+				}
 			}
-		}
 
-		if( selectedPath){
-			var labelForSelectedPath = selectedPath.parent.children["label"];
-			labelForSelectedPath.point.y = selectedPath.lastSegment.point.y;
-		}
-		
+			var parentGroup = selectedPath.parent;
+			parentGroup.children["label"].point.y = selectedPath.lastSegment.point.y;
+			
+			parentGroup.data.start = getUnitPosition( selectedPath.firstSegment.point, chartBoundries ).y;
+			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
+		}	
 
 		//Remove and recreate intersections 
-		intersectionsLayer.removeChildren();
-		intersectionsLayer.activate();
-		createIntersectionLines( chartLinesLayer, chartBoundries );
-
-		//Update chart line labels
-		// updateChartLineLabels( chartLinesLayer, chartLineLabelsLayer );
+		project.layers["intersections"].removeChildren();
+		project.layers["intersections"].activate();
+		createIntersectionLines( project.layers["chartLines"], chartBoundries );
 	}
 }
 
@@ -201,6 +185,27 @@ function onMouseUp(){
  */
 function constrain(value, min, max) {
 	return Math.min(Math.max(value, min), max);
+}
+
+/**
+ * Create the chart and its elements.
+ */
+function createChart( project ) {
+	project.addLayer(new Layer({name: "intersections"}));
+	project.addLayer(new Layer({name: "axes"}));
+	project.addLayer(new Layer({name: "chartLines"}));
+	project.addLayer(new Layer({name: "ui"}));
+
+	project.layers["axes"].activate();
+	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
+	project.layers["chartLines"].activate();
+	createChartLines( chartLineData, chartBoundries );
+	project.layers["intersections"].activate();
+	createIntersectionLines( project.layers["chartLines"], chartBoundries );
+	project.layers["ui"].activate();
+	createChartLineButtons( project.layers["chartLines"] );
+
+	return project;
 }
 
 /**
@@ -327,8 +332,8 @@ function createChartLineButtons( chartLinesLayer ) {
 				this.children["background"].fillColor = "#cccccc";
 			}
 	
-			intersectionsLayer.removeChildren();
-			intersectionsLayer.activate();
+			project.layers["intersections"].removeChildren();
+			project.layers["intersections"].activate();
 			createIntersectionLines( chartLinesLayer, chartBoundries );
 		};
 
