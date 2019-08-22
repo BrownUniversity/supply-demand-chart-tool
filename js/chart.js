@@ -247,10 +247,11 @@ function createChart( project, chartLineData, chartBoundries) {
  * @param {*} chartBoundries 
  */
 function updateChart( project, chartLineData, chartBoundries ){
-	//Remove exiting axes and create new ones
+	//Remove existing axes and create new ones
 	project.layers["axes"].removeChildren();
 	project.layers["axes"].activate();
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
+	createAxesHoverAreas(chartBoundries);
 
 	//Remove existing chart lines and create new ones
 	project.layers["chartLines"].removeChildren();
@@ -280,6 +281,38 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
 	bottomAxis.style = axisLineStyles;
 
 	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
+}
+
+/**
+ * Create area to register hover when near axis
+ * @param {*} chartBoundries 
+ */
+function createAxesHoverAreas(chartBoundries) {
+	var hoverAreaSize = 50;
+
+	var leftOrigin = new Point(chartBoundries.topLeft.x - hoverAreaSize, chartBoundries.topLeft.y);
+	var leftSize = new Size(hoverAreaSize, chartBoundries.height);
+	var leftAxisHoverArea = new Path.Rectangle(leftOrigin, leftSize);
+
+	var bottomOrigin = new Point(chartBoundries.bottomLeft.x, chartBoundries.bottomLeft.y);
+	var bottomSize = new Size(chartBoundries.width, hoverAreaSize);
+	var bottomAxisHoverArea = new Path.Rectangle(bottomOrigin, bottomSize);
+
+	leftAxisHoverArea.onMouseMove = function(event) {
+		// TODO: Update any temporary horizontal intersection lines
+	}
+
+	leftAxisHoverArea.onMouseLeave = function(event) {
+		// TODO: Remove any temporary intersection lines
+	}
+
+	bottomAxisHoverArea.onMouseMove = function(event) {
+		// TODO: Remove any temporary vertical intersection lines
+	}
+
+	bottomAxisHoverArea.onMouseLeave = function(event) {
+		// TODO: Remove any temporary intersection lines
+	}
 }
 
 /**
