@@ -294,11 +294,6 @@ function createAxesHoverAreas(chartBoundries) {
 		priceLine.style = intersectionLineStyle;
 	}
 
-	// Remove any temporary lines
-	leftAxisHoverArea.onMouseLeave = function(event) {
-		project.layers["tempPriceQuantityLines"].removeChildren();
-	}
-
 	//Update any temporary quantity (vertical) lines
 	bottomAxisHoverArea.onMouseMove = function(event) {
 		project.layers["tempPriceQuantityLines"].removeChildren();
@@ -310,10 +305,16 @@ function createAxesHoverAreas(chartBoundries) {
 		priceLine.style = intersectionLineStyle;
 	}
 
-	// Remove any temporary lines
-	bottomAxisHoverArea.onMouseLeave = function(event) {
+	//Function for removing temporary lines
+	var removeTemporaryLines = function(event) {
 		project.layers["tempPriceQuantityLines"].removeChildren();
 	}
+
+	// Remove any temporary price lines
+	leftAxisHoverArea.onMouseLeave = removeTemporaryLines;
+
+	// Remove any temporary quantity lines
+	bottomAxisHoverArea.onMouseLeave = removeTemporaryLines;
 }
 
 /**
