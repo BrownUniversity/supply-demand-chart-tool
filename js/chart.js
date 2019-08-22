@@ -94,7 +94,7 @@ var buttonLabelStyles = {
 //Create the charts
 var safeBox = createSafeBoxDimensions( view.bounds, margin );
 var chartBoundries = createChartDimensions(safeBox);
-createChart(project, chartLineData, chartBoundries);
+createChart(chartLineData, chartBoundries);
 
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
@@ -177,7 +177,7 @@ function onResize(){
 		return chartLineGroup.data;
 	});
 
-	updateChart(project, data, chartBoundries);
+	createChart(data, chartBoundries);
 }
 
 /**
@@ -229,41 +229,23 @@ function createChartDimensions(containerBounds) {
  * @param {*} chartLineData 
  * @param {*} chartBoundries 
  */
-function createChart( project, chartLineData, chartBoundries) {
+function createChart( chartLineData, chartBoundries) {
+	project.clear();
+	
 	project.addLayer(new Layer({name: "intersections"}));
 	project.addLayer(new Layer({name: "axes"}));
 	project.addLayer(new Layer({name: "chartLines"}));
 	project.addLayer(new Layer({name: "ui"}));
 
-	updateChart(project, chartLineData, chartBoundries);
-
-	return project;
-}
-
-/**
- * Update chart to match new data, size, etc.
- * @param {*} project 
- * @param {*} chartLineData 
- * @param {*} chartBoundries 
- */
-function updateChart( project, chartLineData, chartBoundries ){
-	//Remove exiting axes and create new ones
-	project.layers["axes"].removeChildren();
 	project.layers["axes"].activate();
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 
-	//Remove existing chart lines and create new ones
-	project.layers["chartLines"].removeChildren();
 	project.layers["chartLines"].activate();
 	createChartLines( chartLineData, chartBoundries );
 
-	//Remove existing intersections and create new ones 
-	project.layers["intersections"].removeChildren();
 	project.layers["intersections"].activate();
 	createIntersectionLines( project.layers["chartLines"], chartBoundries );
 
-	//Remove existing ui and create new ones
-	project.layers["ui"].removeChildren();
 	project.layers["ui"].activate();
 	createChartLineButtons( project.layers["chartLines"] );
 }
