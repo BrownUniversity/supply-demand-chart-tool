@@ -56,18 +56,10 @@ var supplyDemandLineData = [
 ];
 
 //Price and quantity lines of chart
-var priceQuantityLineData = [
-	// {
-	// 	label: "P₀",
-	// 	type: "price",
-	// 	value: 0.35,
-	// },
-	// {
-	// 	label: "Q₀",
-	// 	type: "quantity",
-	// 	value: 0.15,
-	// }
-]
+var priceQuantityLinesData = [];
+
+//Temporary price and quantity line when hovering near axis
+var tempPriceQuantityLineData = null;
 
 // Styles
 
@@ -115,7 +107,7 @@ var buttonLabelStyles = {
 //Create the charts
 var safeBox = createSafeBoxDimensions( view.bounds, margin );
 var chartBoundries = createChartDimensions(safeBox);
-createChart(supplyDemandLineData, chartBoundries);
+createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
 
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
@@ -176,10 +168,7 @@ function onMouseDrag(event){
 			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
 		}	
 
-		//Remove and recreate intersections 
-		project.layers["equilibriumLines"].removeChildren();
-		project.layers["equilibriumLines"].activate();
-		createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
+		createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
 	}
 }
 
@@ -198,7 +187,7 @@ function onResize(){
 		return chartLineGroup.data;
 	});
 
-	createChart(data, chartBoundries);
+	createChart(data, priceQuantityLinesData, chartBoundries);
 }
 
 /**
@@ -249,7 +238,7 @@ function createChartDimensions(containerBounds) {
  * @param {*} supplyDemandLineData 
  * @param {*} chartBoundries 
  */
-function createChart( supplyDemandLineData, chartBoundries) {
+function createChart( supplyDemandLineData, priceQuantityLineData, chartBoundries) {
 	project.clear();
 	
 	project.addLayer(new Layer({name: "equilibriumLines"}));
@@ -274,6 +263,17 @@ function createChart( supplyDemandLineData, chartBoundries) {
 
 	project.layers["ui"].activate();
 	createChartLineButtons( project.layers["supplyDemandLines"] );
+}
+
+function updateChart(supplyDemandLineData, priceQuantityLineData, chartBoundries) {
+	project.layers["supplyDemandLines"].activate();
+	createSupplyDemandLines( supplyDemandLineData, chartBoundries );
+
+	project.layers["equilibriumLines"].activate();
+	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
+
+	project.layers["priceQuantityLines"].activate();
+	createPriceQuantityLines( priceQuantityLineData, chartBoundries );	
 }
 
 /**
@@ -305,35 +305,58 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 	var bottomSize = new Size(chartBoundries.width, hoverAreaSize);
 	var bottomAxisHoverArea = new Path.Rectangle(bottomOrigin, bottomSize);
 
-	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0);
-	bottomAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0);
+	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0, 0.1);
+	bottomAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0, 0.1);
 
 	//Update any temporary price (horizontal) lines
 	leftAxisHoverArea.onMouseMove = function(event) {
 		project.layers["tempPriceQuantityLines"].removeChildren();
 		project.layers["tempPriceQuantityLines"].activate();
 
-		var lineData = {
+		tempPriceQuantityLineData = {
 			label: "",
 			type: "price",
 			value: getUnitPosition(event.point, chartBoundries).y
 		};
 
-		drawPriceQuantityLine( lineData, chartBoundries, tempIntersectionLineStyle );
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, tempIntersectionLineStyle);
 	}
 	
 	//Update any temporary quantity (vertical) lines
 	bottomAxisHoverArea.onMouseMove = function(event) {
 		project.layers["tempPriceQuantityLines"].removeChildren();
 		project.layers["tempPriceQuantityLines"].activate();
-		
-		var lineData = {
+
+		tempPriceQuantityLineData = {
 			label: "",
 			type: "quantity",
 			value: getUnitPosition(event.point, chartBoundries).x
 		};
-		
-		drawPriceQuantityLine( lineData, chartBoundries, tempIntersectionLineStyle );
+
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, tempIntersectionLineStyle);
+	}
+
+	//Create persistent line on mouse up
+	leftAxisHoverArea.onMouseUp = function(event) {
+		priceQuantityLineData = {
+			label: "P₀",
+			type: "price",
+			value: getUnitPosition(event.point, chartBoundries).y
+		};
+
+		priceQuantityLinesData = [priceQuantityLineData];
+		createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
+	}
+
+	bottomAxisHoverArea.onMouseUp = function(event) {
+		priceQuantityLineData = {
+			label: "Q₀",
+			type: "quantity",
+			value: getUnitPosition(event.point, chartBoundries).x
+		};
+
+		priceQuantityLinesData = [priceQuantityLineData];
+		createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
 	}
 
 	//Function for removing temporary lines
@@ -441,6 +464,30 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 	linePath.style = lineStyle;
 	linePath.name = "path";
 
+	//Create new label
+	var labelPosition = new Point(startPoint);
+	if(lineData.type === "price") {
+		labelPosition.x -= 45;
+	} else {
+		labelPosition.y += 45;
+	}
+	
+
+	var label = new PointText( {
+		point: labelPosition,
+		name: "label",
+		fillColor: lineData.color,
+		content: lineData.label,
+		style: chartLineLabelStyles
+	} );
+
+	// //Create new group
+	// var chartLineGroup = new Group([ linePath, label ])
+	// chartLineGroup.name = lineData.label;
+	// chartLineGroup.data = lineData;
+
+	// chartLineGroup.visible = lineData.visible;
+
 	//Find intersections between line and supply and demand lines
 	var intersections = [];
 	var supplyDemandLines = project.layers["supplyDemandLines"].children;
@@ -521,9 +568,7 @@ function createChartLineButtons( chartLinesLayer ) {
 				this.children["background"].fillColor = "#cccccc";
 			}
 	
-			project.layers["equilibriumLines"].removeChildren();
-			project.layers["equilibriumLines"].activate();
-			createIntersectionLines( chartLinesLayer, chartBoundries );
+			createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
 		};
 
 		button.addChild(label);	
