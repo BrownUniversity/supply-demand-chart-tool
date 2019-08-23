@@ -242,7 +242,7 @@ function createChart( chartLineData, chartBoundries) {
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 	
 	project.layers["supplyDemandLines"].activate();
-	createChartLines( chartLineData, chartBoundries );
+	createSupplyDemandLines( chartLineData, chartBoundries );
 
 	project.layers["equilibriumLines"].activate();
 	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
@@ -377,7 +377,7 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
  * @param {*} chartLineData 
  * @param {*} chartBoundries 
  */
-function createChartLines( chartLineData, chartBoundries ){
+function createSupplyDemandLines( chartLineData, chartBoundries ){
 	for(var i = 0; i < chartLineData.length; i++) {
 		var lineData = chartLineData[i];
 
