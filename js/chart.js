@@ -106,7 +106,7 @@ var hitOptions = {
 	fill: false,
 	tolerance: 5,
 	match: function (hitResults) {
-		return hitResults.item.layer == project.layers["chartLines"];
+		return hitResults.item.layer == project.layers["supplyDemandLines"];
 	}
 };
 
@@ -158,7 +158,7 @@ function onMouseDrag(event){
 		//Remove and recreate intersections 
 		project.layers["intersections"].removeChildren();
 		project.layers["intersections"].activate();
-		createIntersectionLines( project.layers["chartLines"], chartBoundries );
+		createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
 	}
 }
 
@@ -173,7 +173,7 @@ function onResize(){
 	safeBox = createSafeBoxDimensions( view.bounds, margin );
 	chartBoundries = createChartDimensions(safeBox);
 
-	var data = project.layers["chartLines"].children.map( function (chartLineGroup) {
+	var data = project.layers["supplyDemandLines"].children.map( function (chartLineGroup) {
 		return chartLineGroup.data;
 	});
 
@@ -234,21 +234,21 @@ function createChart( chartLineData, chartBoundries) {
 	project.addLayer(new Layer({name: "intersections"}));
 	project.addLayer(new Layer({name: "tempPriceQuantityLines"}));
 	project.addLayer(new Layer({name: "axes"}));
-	project.addLayer(new Layer({name: "chartLines"}));
+	project.addLayer(new Layer({name: "supplyDemandLines"}));
 	project.addLayer(new Layer({name: "ui"}));
 
 	project.layers["axes"].activate();
 	createPriceQuantityHoverAreas(chartBoundries);
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 	
-	project.layers["chartLines"].activate();
+	project.layers["supplyDemandLines"].activate();
 	createChartLines( chartLineData, chartBoundries );
 
 	project.layers["intersections"].activate();
-	createIntersectionLines( project.layers["chartLines"], chartBoundries );
+	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
 
 	project.layers["ui"].activate();
-	createChartLineButtons( project.layers["chartLines"] );
+	createChartLineButtons( project.layers["supplyDemandLines"] );
 }
 
 /**
@@ -283,26 +283,58 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0);
 	bottomAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0);
 
-	//Update any temporary price (horizontal) lines
-	leftAxisHoverArea.onMouseMove = function(event) {
+	var drawTemporaryPriceQuantityLine = function( from, to ){
 		project.layers["tempPriceQuantityLines"].removeChildren();
 		project.layers["tempPriceQuantityLines"].activate();
 
+		var priceQuantityLine = new Path.Line(from, to);
+		
+		//Find intersections between line and supply and demand lines
+		var intersections = [];
+		var supplyDemandLines = project.layers["supplyDemandLines"].children;
+
+		for( var i = 0; i < supplyDemandLines.length; i++) {
+			if(supplyDemandLines[i].visible) {
+				var crossings = priceQuantityLine.getCrossings(supplyDemandLines[i].children["path"]);
+				for(var j = 0; j < crossings.length; j++) {
+					intersections.push(crossings[j]);
+				}
+			}
+		}
+
+		for( var i = 0; i < intersections.length; i++) {
+			var endPoint;
+
+			//Check if line is horizontal (price) or vertical (quantity)
+			if(priceQuantityLine.firstSegment.point.x === priceQuantityLine.lastSegment.point.x ) {
+				//Line is vertical
+				endPoint = new Point(chartBoundries.left, intersections[i].point.y);
+			} else {
+				//Line is horizontal
+				endPoint = new Point(intersections[i].point.x, chartBoundries.bottom);
+			}
+			var newLine = new Path.Line(intersections[i].point, endPoint);
+			newLine.style = intersectionLineStyle;
+
+		}
+
+		priceQuantityLine.style = intersectionLineStyle;
+	}
+
+	//Update any temporary price (horizontal) lines
+	leftAxisHoverArea.onMouseMove = function(event) {
 		var from = new Point( chartBoundries.left, event.point.y );
 		var to = new Point( chartBoundries.right, event.point.y);
-		var priceLine = new Path.Line(from, to);
-		priceLine.style = intersectionLineStyle;
+
+		drawTemporaryPriceQuantityLine(from, to);
 	}
 
 	//Update any temporary quantity (vertical) lines
 	bottomAxisHoverArea.onMouseMove = function(event) {
-		project.layers["tempPriceQuantityLines"].removeChildren();
-		project.layers["tempPriceQuantityLines"].activate();
-
 		var from = new Point( event.point.x, chartBoundries.top  );
 		var to = new Point( event.point.x, chartBoundries.bottom);
-		var priceLine = new Path.Line(from, to);
-		priceLine.style = intersectionLineStyle;
+		
+		drawTemporaryPriceQuantityLine(from, to);
 	}
 
 	//Function for removing temporary lines
