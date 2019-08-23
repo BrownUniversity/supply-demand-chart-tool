@@ -156,8 +156,8 @@ function onMouseDrag(event){
 		}	
 
 		//Remove and recreate intersections 
-		project.layers["intersections"].removeChildren();
-		project.layers["intersections"].activate();
+		project.layers["equilibriumLines"].removeChildren();
+		project.layers["equilibriumLines"].activate();
 		createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
 	}
 }
@@ -231,7 +231,7 @@ function createChartDimensions(containerBounds) {
 function createChart( chartLineData, chartBoundries) {
 	project.clear();
 	
-	project.addLayer(new Layer({name: "intersections"}));
+	project.addLayer(new Layer({name: "equilibriumLines"}));
 	project.addLayer(new Layer({name: "tempPriceQuantityLines"}));
 	project.addLayer(new Layer({name: "axes"}));
 	project.addLayer(new Layer({name: "supplyDemandLines"}));
@@ -244,7 +244,7 @@ function createChart( chartLineData, chartBoundries) {
 	project.layers["supplyDemandLines"].activate();
 	createChartLines( chartLineData, chartBoundries );
 
-	project.layers["intersections"].activate();
+	project.layers["equilibriumLines"].activate();
 	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
 
 	project.layers["ui"].activate();
@@ -460,8 +460,8 @@ function createChartLineButtons( chartLinesLayer ) {
 				this.children["background"].fillColor = "#cccccc";
 			}
 	
-			project.layers["intersections"].removeChildren();
-			project.layers["intersections"].activate();
+			project.layers["equilibriumLines"].removeChildren();
+			project.layers["equilibriumLines"].activate();
 			createIntersectionLines( chartLinesLayer, chartBoundries );
 		};
 
