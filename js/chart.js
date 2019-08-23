@@ -55,6 +55,20 @@ var supplyDemandLineData = [
 	}
 ];
 
+//Price and quantity lines of chart
+var priceQuantityLineData = [
+	{
+		label: "P₀",
+		type: "price",
+		value: 0.35,
+	},
+	{
+		label: "Q₀",
+		type: "quantity",
+		value: 0.15,
+	}
+]
+
 // Styles
 
 var chartLineStyle = {
@@ -233,6 +247,7 @@ function createChart( supplyDemandLineData, chartBoundries) {
 	
 	project.addLayer(new Layer({name: "equilibriumLines"}));
 	project.addLayer(new Layer({name: "tempPriceQuantityLines"}));
+	project.addLayer(new Layer({name: "priceQuantityLines"}));
 	project.addLayer(new Layer({name: "axes"}));
 	project.addLayer(new Layer({name: "supplyDemandLines"}));
 	project.addLayer(new Layer({name: "ui"}));
@@ -246,6 +261,9 @@ function createChart( supplyDemandLineData, chartBoundries) {
 
 	project.layers["equilibriumLines"].activate();
 	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
+
+	project.layers["priceQuantityLines"].activate();
+	createPriceQuantityLines( priceQuantityLineData, chartBoundries );
 
 	project.layers["ui"].activate();
 	createChartLineButtons( project.layers["supplyDemandLines"] );
@@ -408,6 +426,32 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 		chartLineGroup.data = lineData;
 
 		chartLineGroup.visible = lineData.visible;
+	}
+}
+
+/**
+ * Create horizontal and vertical lines representing price or quantity
+ * @param {*} priceQuantityLineData 
+ * @param {*} chartBoundries 
+ */
+function createPriceQuantityLines( priceQuantityLineData, chartBoundries ) {
+	for(var i = 0; i < priceQuantityLineData.length; i++){
+		lineData = priceQuantityLineData[i];
+		var startPoint, endPoint;
+
+		//Find start and end points
+		if(lineData.type === "price") {
+			startPoint = getChartPosition(0, lineData.value, chartBoundries);
+			endPoint = getChartPosition(1.0, lineData.value, chartBoundries);
+		} else {
+			startPoint = getChartPosition(lineData.value, 0, chartBoundries);
+			endPoint = getChartPosition(lineData.value, 1.0, chartBoundries);
+		}
+		console.log(startPoint)
+		//Create new path
+		var linePath = new Path.Line(startPoint, endPoint);
+		linePath.style = intersectionLineStyle;
+		linePath.name = "path";
 	}
 }
 
