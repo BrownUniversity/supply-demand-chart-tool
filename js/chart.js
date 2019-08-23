@@ -57,16 +57,16 @@ var supplyDemandLineData = [
 
 //Price and quantity lines of chart
 var priceQuantityLineData = [
-	{
-		label: "P₀",
-		type: "price",
-		value: 0.35,
-	},
-	{
-		label: "Q₀",
-		type: "quantity",
-		value: 0.15,
-	}
+	// {
+	// 	label: "P₀",
+	// 	type: "price",
+	// 	value: 0.35,
+	// },
+	// {
+	// 	label: "Q₀",
+	// 	type: "quantity",
+	// 	value: 0.15,
+	// }
 ]
 
 // Styles
@@ -295,7 +295,7 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
  * @param {*} chartBoundries 
  */
 function createPriceQuantityHoverAreas(chartBoundries) {
-	var hoverAreaSize = 120;
+	var hoverAreaSize = 80;
 
 	var leftOrigin = new Point(chartBoundries.topLeft.x - hoverAreaSize, chartBoundries.topLeft.y);
 	var leftSize = new Size(hoverAreaSize, chartBoundries.height);
@@ -308,58 +308,32 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0);
 	bottomAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0);
 
-	var drawTemporaryPriceQuantityLine = function( from, to ){
+	//Update any temporary price (horizontal) lines
+	leftAxisHoverArea.onMouseMove = function(event) {
 		project.layers["tempPriceQuantityLines"].removeChildren();
 		project.layers["tempPriceQuantityLines"].activate();
 
-		var priceQuantityLine = new Path.Line(from, to);
-		
-		//Find intersections between line and supply and demand lines
-		var intersections = [];
-		var supplyDemandLines = project.layers["supplyDemandLines"].children;
+		var lineData = {
+			label: "",
+			type: "price",
+			value: getUnitPosition(event.point, chartBoundries).y
+		};
 
-		for( var i = 0; i < supplyDemandLines.length; i++) {
-			if(supplyDemandLines[i].visible) {
-				var crossings = priceQuantityLine.getCrossings(supplyDemandLines[i].children["path"]);
-				for(var j = 0; j < crossings.length; j++) {
-					intersections.push(crossings[j]);
-				}
-			}
-		}
-
-		for( var i = 0; i < intersections.length; i++) {
-			var endPoint;
-
-			//Check if line is horizontal (price) or vertical (quantity)
-			if(priceQuantityLine.firstSegment.point.x === priceQuantityLine.lastSegment.point.x ) {
-				//Line is vertical
-				endPoint = new Point(chartBoundries.left, intersections[i].point.y);
-			} else {
-				//Line is horizontal
-				endPoint = new Point(intersections[i].point.x, chartBoundries.bottom);
-			}
-			var newLine = new Path.Line(intersections[i].point, endPoint);
-			newLine.style = tempIntersectionLineStyle;
-
-		}
-
-		priceQuantityLine.style = tempIntersectionLineStyle;
+		drawPriceQuantityLine( lineData, chartBoundries, tempIntersectionLineStyle );
 	}
-
-	//Update any temporary price (horizontal) lines
-	leftAxisHoverArea.onMouseMove = function(event) {
-		var from = new Point( chartBoundries.left, event.point.y );
-		var to = new Point( chartBoundries.right, event.point.y);
-
-		drawTemporaryPriceQuantityLine(from, to);
-	}
-
+	
 	//Update any temporary quantity (vertical) lines
 	bottomAxisHoverArea.onMouseMove = function(event) {
-		var from = new Point( event.point.x, chartBoundries.top  );
-		var to = new Point( event.point.x, chartBoundries.bottom);
+		project.layers["tempPriceQuantityLines"].removeChildren();
+		project.layers["tempPriceQuantityLines"].activate();
 		
-		drawTemporaryPriceQuantityLine(from, to);
+		var lineData = {
+			label: "",
+			type: "quantity",
+			value: getUnitPosition(event.point, chartBoundries).x
+		};
+		
+		drawPriceQuantityLine( lineData, chartBoundries, tempIntersectionLineStyle );
 	}
 
 	//Function for removing temporary lines
