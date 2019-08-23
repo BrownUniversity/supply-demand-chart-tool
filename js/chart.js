@@ -391,7 +391,7 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 }
 
 /**
- * Create the lines of the chart
+ * Create the supply and demand lines of the chart
  * @param {*} chartLineData 
  * @param {*} chartBoundries 
  */
