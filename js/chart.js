@@ -238,7 +238,7 @@ function createChart( chartLineData, chartBoundries) {
 	project.addLayer(new Layer({name: "ui"}));
 
 	project.layers["axes"].activate();
-	createAxesHoverAreas(chartBoundries);
+	createPriceQuantityHoverAreas(chartBoundries);
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 	
 	project.layers["chartLines"].activate();
@@ -266,10 +266,10 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
 }
 
 /**
- * Create area to register hover when near axis
+ * Create area near axes that when user hovers will draw temporary price or quantity lines.
  * @param {*} chartBoundries 
  */
-function createAxesHoverAreas(chartBoundries) {
+function createPriceQuantityHoverAreas(chartBoundries) {
 	var hoverAreaSize = 120;
 
 	var leftOrigin = new Point(chartBoundries.topLeft.x - hoverAreaSize, chartBoundries.topLeft.y);
