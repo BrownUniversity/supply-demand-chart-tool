@@ -225,10 +225,10 @@ function createChartDimensions(containerBounds) {
 
 /**
  * Create the chart and its elements.
- * @param {*} chartLineData 
+ * @param {*} supplyDemandLineData 
  * @param {*} chartBoundries 
  */
-function createChart( chartLineData, chartBoundries) {
+function createChart( supplyDemandLineData, chartBoundries) {
 	project.clear();
 	
 	project.addLayer(new Layer({name: "equilibriumLines"}));
@@ -242,7 +242,7 @@ function createChart( chartLineData, chartBoundries) {
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 	
 	project.layers["supplyDemandLines"].activate();
-	createSupplyDemandLines( chartLineData, chartBoundries );
+	createSupplyDemandLines( supplyDemandLineData, chartBoundries );
 
 	project.layers["equilibriumLines"].activate();
 	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
