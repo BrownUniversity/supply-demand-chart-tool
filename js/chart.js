@@ -20,7 +20,7 @@ var xAxisLabelText = "Quantity";
 var yAxisLabelText = "Price";
 
 //Supply and demand lines of chart 
-var chartLineData = [
+var supplyDemandLineData = [
 	{
 		label: "S₀",
 		type: "supply",
@@ -94,7 +94,7 @@ var buttonLabelStyles = {
 //Create the charts
 var safeBox = createSafeBoxDimensions( view.bounds, margin );
 var chartBoundries = createChartDimensions(safeBox);
-createChart(chartLineData, chartBoundries);
+createChart(supplyDemandLineData, chartBoundries);
 
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
