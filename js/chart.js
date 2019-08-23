@@ -76,8 +76,15 @@ var chartLineStyle = {
 	strokeCap: "round"	
 };
 
+var tempIntersectionLineStyle = {
+	strokeColor: "#cccccc",
+	strokeWidth: 4,
+	strokeCap: "butt",
+	dashArray: [8, 6]
+}
+
 var intersectionLineStyle = {
-	strokeColor: "#bbbbbb",
+	strokeColor: "#888888",
 	strokeWidth: 4,
 	strokeCap: "butt",
 	dashArray: [8, 6]
@@ -332,11 +339,11 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 				endPoint = new Point(intersections[i].point.x, chartBoundries.bottom);
 			}
 			var newLine = new Path.Line(intersections[i].point, endPoint);
-			newLine.style = intersectionLineStyle;
+			newLine.style = tempIntersectionLineStyle;
 
 		}
 
-		priceQuantityLine.style = intersectionLineStyle;
+		priceQuantityLine.style = tempIntersectionLineStyle;
 	}
 
 	//Update any temporary price (horizontal) lines
@@ -437,23 +444,59 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 function createPriceQuantityLines( priceQuantityLineData, chartBoundries ) {
 	for(var i = 0; i < priceQuantityLineData.length; i++){
 		lineData = priceQuantityLineData[i];
-		var startPoint, endPoint;
-
-		//Find start and end points
-		if(lineData.type === "price") {
-			startPoint = getChartPosition(0, lineData.value, chartBoundries);
-			endPoint = getChartPosition(1.0, lineData.value, chartBoundries);
-		} else {
-			startPoint = getChartPosition(lineData.value, 0, chartBoundries);
-			endPoint = getChartPosition(lineData.value, 1.0, chartBoundries);
-		}
-		console.log(startPoint)
-		//Create new path
-		var linePath = new Path.Line(startPoint, endPoint);
-		linePath.style = intersectionLineStyle;
-		linePath.name = "path";
+		drawPriceQuantityLine( lineData, chartBoundries, intersectionLineStyle );
 	}
 }
+
+function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
+	var startPoint, endPoint;
+
+	//Find start and end points
+	if(lineData.type === "price") {
+		//Draw horizontal line for price
+		startPoint = getChartPosition(0, lineData.value, chartBoundries);
+		endPoint = getChartPosition(1.0, lineData.value, chartBoundries);
+	} else {
+		//Otherwise draw vertical line for quantity
+		startPoint = getChartPosition(lineData.value, 0, chartBoundries);
+		endPoint = getChartPosition(lineData.value, 1.0, chartBoundries);
+	}
+	
+	//Create new path
+	var linePath = new Path.Line(startPoint, endPoint);
+	linePath.style = lineStyle;
+	linePath.name = "path";
+
+	//Find intersections between line and supply and demand lines
+	var intersections = [];
+	var supplyDemandLines = project.layers["supplyDemandLines"].children;
+
+	for( var i = 0; i < supplyDemandLines.length; i++) {
+		if(supplyDemandLines[i].visible) {
+			var crossings = linePath.getCrossings(supplyDemandLines[i].children["path"]);
+			for(var j = 0; j < crossings.length; j++) {
+				intersections.push(crossings[j]);
+			}
+		}
+	}
+
+	for( var i = 0; i < intersections.length; i++) {
+		var intersectionEndPoint;
+
+		//Check if line is price (horizontal) or quantity (vertical)
+		if(lineData.type === "price") {
+			//Draw vertical intersection lines for price (which is horizontal)
+			intersectionEndPoint = new Point(intersections[i].point.x, chartBoundries.bottom);
+		} else {
+			//Draw horizontal intersection lines for quantity (which is vertica)
+			intersectionEndPoint = new Point(chartBoundries.left, intersections[i].point.y);
+		}
+		
+		var intersectionLine = new Path.Line(intersections[i].point, intersectionEndPoint);
+	  intersectionLine.style = lineStyle;
+	}
+}
+
 
 function createChartLineButtons( chartLinesLayer ) {
 	var chartLines = chartLinesLayer.children;
