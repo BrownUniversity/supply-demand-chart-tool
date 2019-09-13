@@ -16,7 +16,7 @@ var oranges = [
 // Canvas settings
 var margin = {
 	left: 125,
-	right: 100,
+	right: 110,
 	top: 25,
 	bottom: 25
 };
@@ -124,7 +124,13 @@ var hitOptions = {
 	fill: false,
 	tolerance: 5,
 	match: function (hitResults) {
-		return hitResults.item.layer == project.layers["supplyDemandLines"];
+		if(hitResults.item.layer === project.layers["priceQuantityLines"]){
+			return true;
+		}
+		if(hitResults.item.layer === project.layers["supplyDemandLines"]) {
+			return true;
+		}
+		return false;
 	}
 };
 
@@ -133,12 +139,12 @@ var selectedSegment, selectedPath;
 /* exported onMouseDown */
 function onMouseDown(event){
 	var hitResults = project.hitTest(event.point, hitOptions);
-
+	
 	//If not hit results nothing to do
 	if(!hitResults) {
 		return;
 	}
-
+	
 	selectedPath = hitResults.item;
 	
 	if( hitResults.type == 'segment') {
@@ -152,14 +158,16 @@ function onMouseDown(event){
 
 /* exported onMouseDrag */
 function onMouseDrag(event){
+	
 	if( event.point.isInside(dragBoundries) ) {
 		if( selectedPath ) {
 			if(selectedSegment) {
 				selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
 			} else {
+				
 				var topEdge = selectedPath.bounds.top + event.delta.y;
 				var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
-	
+				
 				//Check to make sure part of path doesn't extend beyond the chart area.
 				if( topEdge > chartBoundries.top && bottomEdge < chartBoundries.bottom){
 					selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
@@ -582,7 +590,7 @@ function createChartLineButtons( chartLinesLayer ) {
 
 	buttons.pivot = buttons.bounds.topRight;
 	buttons.position = safeBox.topRight;
-	buttons.position.x += 75;
+	buttons.position.x += 110;
 }
 
 /**
