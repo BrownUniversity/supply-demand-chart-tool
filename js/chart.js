@@ -14,7 +14,12 @@ var oranges = [
 ];
 
 // Canvas settings
-var margin = 25;
+var margin = {
+	left: 125,
+	right: 100,
+	top: 25,
+	bottom: 25
+};
 
 var xAxisLabelText = "Quantity";
 var yAxisLabelText = "Price";
@@ -207,10 +212,10 @@ function constrain(value, min, max) {
  */
 function createSafeBoxDimensions(containerBounds, margin){
 	var safeBox = new Rectangle( containerBounds );
-	safeBox.width -= margin * 2;
-	safeBox.height-= margin * 2;
-	safeBox.center = view.center;
-
+	safeBox.width -= (margin.left + margin.right);
+	safeBox.height -= (margin.top + margin.bottom);
+	safeBox.topLeft.x = margin.left;
+	safeBox.topLeft.y = margin.top;
 	return safeBox;
 }
 
@@ -222,7 +227,7 @@ function createSafeBoxDimensions(containerBounds, margin){
 function createChartDimensions(containerBounds) {
 	var xAxisLabelMargin = 75;
 	
-	var chartDimension = Math.min(containerBounds.width, containerBounds.height) - xAxisLabelMargin;
+	var chartDimension = Math.min(containerBounds.width, containerBounds.height);
 	
 	// Chart settings
 	var chartSize = new Size(chartDimension, chartDimension);
@@ -379,14 +384,14 @@ function createPriceQuantityHoverAreas(chartBoundries) {
  */
 function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomRight);
-	xLabelPosition.y += 64;
+	xLabelPosition.y += 75;
 	var xAxisLabel = new PointText( xLabelPosition );
 	xAxisLabel.style = axisLabelStyles;
 	xAxisLabel.justification = "right";
 	xAxisLabel.content = xAxisLabelText;
 
 	var yLabelPosition = new Point(chartBoundries.topLeft);
-	yLabelPosition.x -= 50;
+	yLabelPosition.x -= 60;
 	yLabelPosition.y += axisLabelStyles.fontSize;
 	var yAxisLabel = new PointText( yLabelPosition );
 	yAxisLabel.style = axisLabelStyles;
@@ -577,6 +582,7 @@ function createChartLineButtons( chartLinesLayer ) {
 
 	buttons.pivot = buttons.bounds.topRight;
 	buttons.position = safeBox.topRight;
+	buttons.position.x += 75;
 }
 
 /**
