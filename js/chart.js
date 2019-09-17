@@ -21,7 +21,7 @@ var prefs = {
 		bottom: 25
 	},
 	lineStyle: {
-		chart: {
+		supplyDemand: {
 			strokeWidth: 8,
 			strokeCap: "round"
 		},
@@ -431,7 +431,7 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 
 		//Create new path
 		var linePath = new Path.Line(startPoint, endPoint);
-		linePath.style = prefs.lineStyle.chart;
+		linePath.style = prefs.lineStyle.supplyDemand;
 		linePath.strokeColor = lineData.color;
 		linePath.name = "path";
 
