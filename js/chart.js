@@ -13,7 +13,8 @@ var prefs = {
 			"#3182bd",  // Medium orange
 			"#6baed6",  // Light blue
 		],
-		disabledButton: "#cccccc"
+		disabledButton: "#cccccc",
+		buttonText: "white"
 	},
 	margin: {
 		left: 125,
@@ -569,7 +570,7 @@ function createChartLineButtons( chartLinesLayer ) {
 		var label = new PointText( {
 			point: buttonPosition,
 			name: currentLine.data.label,
-			fillColor: "white",
+			fillColor: prefs.color.buttonText,
 			content: currentLine.data.label,
 			justification: "center"
 		} );
