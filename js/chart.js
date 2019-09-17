@@ -65,7 +65,8 @@ var prefs = {
 			width: 50,
 			height: 32, 
 			spacing: 10,
-			horizontalOffset: 75
+			horizontalOffset: 75,
+			cornerRadius: 10
 		}
 	},
 	ui: {
@@ -557,8 +558,8 @@ function createChartLineButtons( chartLinesLayer ) {
 		button.data.color = chartLines[i].data.color;
 		
 		var rectangle = new Rectangle(new Point(0, 0), buttonSize);
-		var cornerSize = new Size(10, 10);
-		var buttonBox = new Path.Rectangle(rectangle, cornerSize);
+		var cornerRadiusSize = new Size(prefs.layout.supplyDemandButton.cornerRadius, prefs.layout.supplyDemandButton.cornerRadius);
+		var buttonBox = new Path.Rectangle(rectangle, cornerRadiusSize);
 		buttonBox.position = buttonPosition;
 		buttonBox.name = "background";
 
