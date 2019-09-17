@@ -1,7 +1,6 @@
 /*global Point, Path, Size, Rectangle, Layer, Group, PointText, project, view*/
 
 // Preferences: style, color, margins etc.
-
 var prefs = {
 	color: {
 		supply: [  //Oranges
@@ -14,15 +13,13 @@ var prefs = {
 			"#3182bd",
 			"#6baed6",
 		]
+	},
+	margin: {
+		left: 125,
+		right: 110,
+		top: 25,
+		bottom: 25
 	}
-};
-
-// Canvas settings
-var margin = {
-	left: 125,
-	right: 110,
-	top: 25,
-	bottom: 25
 };
 
 var xAxisLabelText = "Quantity";
@@ -114,7 +111,7 @@ var buttonLabelStyles = {
 }
 
 //Create the charts
-var safeBox = createSafeBoxDimensions( view.bounds, margin );
+var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 var chartBoundries = createChartDimensions(safeBox);
 createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
 
@@ -197,7 +194,7 @@ function onMouseUp(){
 
 /* exported onResize */
 function onResize(){
-	safeBox = createSafeBoxDimensions( view.bounds, margin );
+	safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 	chartBoundries = createChartDimensions(safeBox);
 
 	var data = project.layers["supplyDemandLines"].children.map( function (chartLineGroup) {
