@@ -1,17 +1,21 @@
 /*global Point, Path, Size, Rectangle, Layer, Group, PointText, project, view*/
 
-// Colors
-var blues = [
-	"#08519c",
-	"#3182bd",
-	"#6baed6",
-];
+// Preferences: style, color, margins etc.
 
-var oranges = [
-	"#e6550d",
-	"#fd8d3c",
-	"#fdbe85",
-];
+var prefs = {
+	color: {
+		supply: [  //Oranges
+			"#e6550d",
+			"#fd8d3c",
+			"#fdbe85",
+		],
+		demand: [  //Blues
+			"#08519c",
+			"#3182bd",
+			"#6baed6",
+		]
+	}
+};
 
 // Canvas settings
 var margin = {
@@ -31,7 +35,7 @@ var supplyDemandLineData = [
 		type: "supply",
 		start: 0.2,
 		end: 0.7,
-		color: oranges[0],
+		color: prefs.color.supply[0],
 		visible: true
 	},
 	{
@@ -39,7 +43,7 @@ var supplyDemandLineData = [
 		type: "supply",
 		start: 0.3,
 		end: 0.8,
-		color: oranges[2],
+		color: prefs.color.supply[2],
 		visible: false
 	},
 	{
@@ -47,7 +51,7 @@ var supplyDemandLineData = [
 		type: "demand",
 		start: 0.7,
 		end: 0.2,
-		color: blues[0],
+		color: prefs.color.demand[0],
 		visible: true
 	},
 	{
@@ -55,7 +59,7 @@ var supplyDemandLineData = [
 		type: "demand",
 		start: 0.8,
 		end: 0.3,
-		color: blues[2],
+		color: prefs.color.demand[2],
 		visible: false
 	}
 ];
