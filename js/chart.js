@@ -1,24 +1,83 @@
 /*global Point, Path, Size, Rectangle, Layer, Group, PointText, project, view*/
 
-// Colors
-var blues = [
-	"#08519c",
-	"#3182bd",
-	"#6baed6",
-];
-
-var oranges = [
-	"#e6550d",
-	"#fd8d3c",
-	"#fdbe85",
-];
-
-// Canvas settings
-var margin = {
-	left: 125,
-	right: 110,
-	top: 25,
-	bottom: 25
+// Preferences: style, color, margins etc.
+var prefs = {
+	color: {
+		supply: [
+			"#e6550d",  // Dark orange
+			"#fd8d3c",  // Medium orange
+			"#fdbe85",  // Light orange
+		],
+		demand: [  
+			"#08519c",  // Dark blue
+			"#3182bd",  // Medium orange
+			"#6baed6",  // Light blue
+		],
+		disabledButton: "#cccccc",
+		buttonText: "white"
+	},
+	margin: {
+		left: 125,
+		right: 110,
+		top: 25,
+		bottom: 25
+	},
+	lineStyle: {
+		supplyDemand: {
+			strokeWidth: 8,
+			strokeCap: "round"
+		},
+		intersection: {
+			strokeColor: "#888888",
+			strokeWidth: 3,
+			strokeCap: "butt",
+			dashArray: [10, 6]
+		},
+		intersectionHover: {
+			strokeColor: "#cccccc",
+			strokeWidth: 3,
+			strokeCap: "butt",
+			dashArray: [10, 6]
+		},
+		axis: {
+			strokeColor: "black",
+			strokeWidth: 2,
+		},
+	},
+	textStyle: {
+		axisLabel: {
+			color: "black",
+			fontFamily: "'Roboto', 'sans-serif'",
+			fontSize: 28
+		},
+		supplyDemandLabel: {
+			fontFamily: "'Roboto', 'sans-serif'",
+			fontSize: 36
+		},
+		buttonLabel: {
+			fontFamily: "'Roboto', 'sans-serif'",
+			fontSize: 20,
+			fontWeight: "bold"
+		}
+	},
+	layout: {
+		supplyDemandButton: {
+			width: 50,
+			height: 32, 
+			spacing: 10,
+			horizontalOffset: 75,
+			cornerRadius: 10
+		},
+		priceQuantityLineLabel: {
+			offset: 45
+		}
+	},
+	ui: {
+		axisHoverArea: {
+			size: 80,
+			offset: 5
+		}
+	}
 };
 
 var xAxisLabelText = "Quantity";
@@ -31,7 +90,7 @@ var supplyDemandLineData = [
 		type: "supply",
 		start: 0.2,
 		end: 0.7,
-		color: oranges[0],
+		color: prefs.color.supply[0],
 		visible: true
 	},
 	{
@@ -39,7 +98,7 @@ var supplyDemandLineData = [
 		type: "supply",
 		start: 0.3,
 		end: 0.8,
-		color: oranges[2],
+		color: prefs.color.supply[2],
 		visible: false
 	},
 	{
@@ -47,7 +106,7 @@ var supplyDemandLineData = [
 		type: "demand",
 		start: 0.7,
 		end: 0.2,
-		color: blues[0],
+		color: prefs.color.demand[0],
 		visible: true
 	},
 	{
@@ -55,7 +114,7 @@ var supplyDemandLineData = [
 		type: "demand",
 		start: 0.8,
 		end: 0.3,
-		color: blues[2],
+		color: prefs.color.demand[2],
 		visible: false
 	}
 ];
@@ -66,51 +125,8 @@ var priceQuantityLinesData = [];
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
 
-// Styles
-
-var chartLineStyle = {
-	strokeWidth: 8,
-	strokeCap: "round"	
-};
-
-var tempIntersectionLineStyle = {
-	strokeColor: "#cccccc",
-	strokeWidth: 4,
-	strokeCap: "butt",
-	dashArray: [8, 6]
-}
-
-var intersectionLineStyle = {
-	strokeColor: "#888888",
-	strokeWidth: 4,
-	strokeCap: "butt",
-	dashArray: [8, 6]
-}
-
-var axisLineStyles = {
-	strokeColor: "black",
-	strokeWidth: 2,
-}
-
-var axisLabelStyles = {
-	color: "black",
-	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 28
-}
-
-var chartLineLabelStyles = {
-	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 36
-}
-
-var buttonLabelStyles = {
-	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 20,
-	fontWeight: "bold"
-}
-
 //Create the charts
-var safeBox = createSafeBoxDimensions( view.bounds, margin );
+var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 var chartBoundries = createChartDimensions(safeBox);
 createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
 
@@ -193,7 +209,7 @@ function onMouseUp(){
 
 /* exported onResize */
 function onResize(){
-	safeBox = createSafeBoxDimensions( view.bounds, margin );
+	safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 	chartBoundries = createChartDimensions(safeBox);
 
 	var data = project.layers["supplyDemandLines"].children.map( function (chartLineGroup) {
@@ -233,8 +249,6 @@ function createSafeBoxDimensions(containerBounds, margin){
  * @param {*} margin 
  */
 function createChartDimensions(containerBounds) {
-	var xAxisLabelMargin = 75;
-	
 	var chartDimension = Math.min(containerBounds.width, containerBounds.height);
 	
 	// Chart settings
@@ -244,7 +258,6 @@ function createChartDimensions(containerBounds) {
 
 	return chartBoundries;
 }
-
 
 /**
  * Create the chart and its elements.
@@ -295,10 +308,10 @@ function updateChart(supplyDemandLineData, priceQuantityLineData, chartBoundries
  */
 function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
 	var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
-	leftAxis.style = axisLineStyles;
+	leftAxis.style = prefs.lineStyle.axis;
 
 	var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
-	bottomAxis.style = axisLineStyles;
+	bottomAxis.style = prefs.lineStyle.axis;
 
 	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
 }
@@ -308,14 +321,13 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
  * @param {*} chartBoundries 
  */
 function createPriceQuantityHoverAreas(chartBoundries) {
-	var hoverAreaSize = 80;
-
-	var leftOrigin = new Point(chartBoundries.topLeft.x - hoverAreaSize, chartBoundries.topLeft.y);
-	var leftSize = new Size(hoverAreaSize, chartBoundries.height);
+	var leftOriginX = chartBoundries.topLeft.x - prefs.ui.axisHoverArea.size - prefs.ui.axisHoverArea.offset;
+	var leftOrigin = new Point(leftOriginX, chartBoundries.topLeft.y);
+	var leftSize = new Size(prefs.ui.axisHoverArea.size, chartBoundries.height);
 	var leftAxisHoverArea = new Path.Rectangle(leftOrigin, leftSize);
 
-	var bottomOrigin = new Point(chartBoundries.bottomLeft.x, chartBoundries.bottomLeft.y);
-	var bottomSize = new Size(chartBoundries.width, hoverAreaSize);
+	var bottomOrigin = new Point(chartBoundries.bottomLeft.x, chartBoundries.bottomLeft.y + prefs.ui.axisHoverArea.offset);
+	var bottomSize = new Size(chartBoundries.width, prefs.ui.axisHoverArea.size);
 	var bottomAxisHoverArea = new Path.Rectangle(bottomOrigin, bottomSize);
 
 	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0, 0.1);
@@ -332,7 +344,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 			value: getUnitPosition(event.point, chartBoundries).y
 		};
 
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, tempIntersectionLineStyle);
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, prefs.lineStyle.intersectionHover);
 	}
 	
 	//Update any temporary quantity (vertical) lines
@@ -346,7 +358,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 			value: getUnitPosition(event.point, chartBoundries).x
 		};
 
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, tempIntersectionLineStyle);
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, prefs.lineStyle.intersectionHover);
 	}
 
 	//Create persistent line on mouse up
@@ -394,15 +406,15 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomRight);
 	xLabelPosition.y += 75;
 	var xAxisLabel = new PointText( xLabelPosition );
-	xAxisLabel.style = axisLabelStyles;
+	xAxisLabel.style = prefs.textStyle.axisLabel;
 	xAxisLabel.justification = "right";
 	xAxisLabel.content = xAxisLabelText;
 
 	var yLabelPosition = new Point(chartBoundries.topLeft);
 	yLabelPosition.x -= 60;
-	yLabelPosition.y += axisLabelStyles.fontSize;
+	yLabelPosition.y += prefs.textStyle.axisLabel.fontSize;
 	var yAxisLabel = new PointText( yLabelPosition );
-	yAxisLabel.style = axisLabelStyles;
+	yAxisLabel.style = prefs.textStyle.axisLabel;
 	yAxisLabel.justification = "right";
 	yAxisLabel.content = yAxisLabelText;	
 }
@@ -428,12 +440,12 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 			name: "label",
 			fillColor: lineData.color,
 			content: lineData.label,
-			style: chartLineLabelStyles
+			style: prefs.textStyle.supplyDemandLabel
 		} );
 
 		//Create new path
 		var linePath = new Path.Line(startPoint, endPoint);
-		linePath.style = chartLineStyle;
+		linePath.style = prefs.lineStyle.supplyDemand;
 		linePath.strokeColor = lineData.color;
 		linePath.name = "path";
 
@@ -454,7 +466,7 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 function createPriceQuantityLines( priceQuantityLineData, chartBoundries ) {
 	for(var i = 0; i < priceQuantityLineData.length; i++){
 		lineData = priceQuantityLineData[i];
-		drawPriceQuantityLine( lineData, chartBoundries, intersectionLineStyle );
+		drawPriceQuantityLine( lineData, chartBoundries, prefs.lineStyle.intersection );
 	}
 }
 
@@ -480,18 +492,17 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 	//Create new label
 	var labelPosition = new Point(startPoint);
 	if(lineData.type === "price") {
-		labelPosition.x -= 45;
+		labelPosition.x -= prefs.layout.priceQuantityLineLabel.offset;
 	} else {
-		labelPosition.y += 45;
+		labelPosition.y += prefs.layout.priceQuantityLineLabel.offset;
 	}
 	
-
 	var label = new PointText( {
 		point: labelPosition,
 		name: "label",
 		fillColor: lineData.color,
 		content: lineData.label,
-		style: chartLineLabelStyles
+		style: prefs.textStyle.supplyDemandLabel
 	} );
 
 	// //Create new group
@@ -534,8 +545,8 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 
 function createChartLineButtons( chartLinesLayer ) {
 	var chartLines = chartLinesLayer.children;
-	var buttonSize = new Size(50, 32);
-	var buttonSpacing = 10;
+	var buttonSize = new Size(prefs.layout.supplyDemandButton.width, prefs.layout.supplyDemandButton.height);
+	var buttonSpacing = prefs.layout.supplyDemandButton.spacing;
 
 	var buttons = new Group({name: "buttons"});
 
@@ -549,15 +560,15 @@ function createChartLineButtons( chartLinesLayer ) {
 		button.data.color = chartLines[i].data.color;
 		
 		var rectangle = new Rectangle(new Point(0, 0), buttonSize);
-		var cornerSize = new Size(10, 10);
-		var buttonBox = new Path.Rectangle(rectangle, cornerSize);
+		var cornerRadiusSize = new Size(prefs.layout.supplyDemandButton.cornerRadius, prefs.layout.supplyDemandButton.cornerRadius);
+		var buttonBox = new Path.Rectangle(rectangle, cornerRadiusSize);
 		buttonBox.position = buttonPosition;
 		buttonBox.name = "background";
 
 		if(currentLine.visible) {
 			buttonBox.fillColor = chartLines[i].data.color;
 		} else {
-			buttonBox.fillColor = "#cccccc";
+			buttonBox.fillColor = prefs.color.disabledButton;
 		}
 		
 		button.addChild(buttonBox);
@@ -565,11 +576,11 @@ function createChartLineButtons( chartLinesLayer ) {
 		var label = new PointText( {
 			point: buttonPosition,
 			name: currentLine.data.label,
-			fillColor: "white",
+			fillColor: prefs.color.buttonText,
 			content: currentLine.data.label,
 			justification: "center"
 		} );
-		label.style = buttonLabelStyles;
+		label.style = prefs.textStyle.buttonLabel;
 		label.position.y += 5;  //Centers text vertically in box
 		
 		button.onMouseDown = function () {
@@ -578,7 +589,7 @@ function createChartLineButtons( chartLinesLayer ) {
 			if(this.data.chartline.visible) {
 				this.children["background"].fillColor = this.data.color;
 			} else {
-				this.children["background"].fillColor = "#cccccc";
+				this.children["background"].fillColor = prefs.color.disabledButton;
 			}
 	
 			createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
@@ -590,7 +601,7 @@ function createChartLineButtons( chartLinesLayer ) {
 
 	buttons.pivot = buttons.bounds.topRight;
 	buttons.position = safeBox.topRight;
-	buttons.position.x += 110;
+	buttons.position.x += prefs.layout.supplyDemandButton.horizontalOffset;
 }
 
 /**
@@ -614,7 +625,7 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
 					var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
 					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
 					var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
-					intersection.style = intersectionLineStyle;
+					intersection.style = prefs.lineStyle.intersection;
 				}
 			}
 		}
