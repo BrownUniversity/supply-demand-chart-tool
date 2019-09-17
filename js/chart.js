@@ -497,7 +497,6 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 		labelPosition.y += prefs.layout.priceQuantityLineLabel.offset;
 	}
 	
-
 	var label = new PointText( {
 		point: labelPosition,
 		name: "label",
