@@ -19,6 +19,24 @@ var prefs = {
 		right: 110,
 		top: 25,
 		bottom: 25
+	},
+	lineStyle: {
+		chart: {
+			strokeWidth: 8,
+			strokeCap: "round"
+		},
+		intersection: {
+			strokeColor: "#888888",
+			strokeWidth: 3,
+			strokeCap: "butt",
+			dashArray: [10, 6]
+		},
+		intersectionHover: {
+			strokeColor: "#cccccc",
+			strokeWidth: 3,
+			strokeCap: "butt",
+			dashArray: [10, 6]
+		}
 	}
 };
 
@@ -66,27 +84,6 @@ var priceQuantityLinesData = [];
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
-
-// Styles
-
-var chartLineStyle = {
-	strokeWidth: 8,
-	strokeCap: "round"	
-};
-
-var tempIntersectionLineStyle = {
-	strokeColor: "#cccccc",
-	strokeWidth: 4,
-	strokeCap: "butt",
-	dashArray: [8, 6]
-}
-
-var intersectionLineStyle = {
-	strokeColor: "#888888",
-	strokeWidth: 4,
-	strokeCap: "butt",
-	dashArray: [8, 6]
-}
 
 var axisLineStyles = {
 	strokeColor: "black",
@@ -333,7 +330,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 			value: getUnitPosition(event.point, chartBoundries).y
 		};
 
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, tempIntersectionLineStyle);
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, prefs.lineStyle.intersectionHover);
 	}
 	
 	//Update any temporary quantity (vertical) lines
@@ -347,7 +344,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 			value: getUnitPosition(event.point, chartBoundries).x
 		};
 
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, tempIntersectionLineStyle);
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, prefs.lineStyle.intersectionHover);
 	}
 
 	//Create persistent line on mouse up
@@ -434,7 +431,7 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 
 		//Create new path
 		var linePath = new Path.Line(startPoint, endPoint);
-		linePath.style = chartLineStyle;
+		linePath.style = prefs.lineStyle.chart;
 		linePath.strokeColor = lineData.color;
 		linePath.name = "path";
 
@@ -455,7 +452,7 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 function createPriceQuantityLines( priceQuantityLineData, chartBoundries ) {
 	for(var i = 0; i < priceQuantityLineData.length; i++){
 		lineData = priceQuantityLineData[i];
-		drawPriceQuantityLine( lineData, chartBoundries, intersectionLineStyle );
+		drawPriceQuantityLine( lineData, chartBoundries, prefs.lineStyle.intersection );
 	}
 }
 
@@ -615,7 +612,7 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
 					var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
 					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
 					var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
-					intersection.style = intersectionLineStyle;
+					intersection.style = prefs.lineStyle.intersection;
 				}
 			}
 		}
