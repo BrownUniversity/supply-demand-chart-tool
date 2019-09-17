@@ -12,7 +12,8 @@ var prefs = {
 			"#08519c",  // Dark blue
 			"#3182bd",  // Medium orange
 			"#6baed6",  // Light blue
-		]
+		],
+		disabledButton: "#cccccc"
 	},
 	margin: {
 		left: 125,
@@ -40,7 +41,7 @@ var prefs = {
 		axis: {
 			strokeColor: "black",
 			strokeWidth: 2,
-		}
+		},
 	},
 	textStyle: {
 		axisLabel: {
@@ -560,7 +561,7 @@ function createChartLineButtons( chartLinesLayer ) {
 		if(currentLine.visible) {
 			buttonBox.fillColor = chartLines[i].data.color;
 		} else {
-			buttonBox.fillColor = "#cccccc";
+			buttonBox.fillColor = prefs.color.disabledButton;
 		}
 		
 		button.addChild(buttonBox);
@@ -581,7 +582,7 @@ function createChartLineButtons( chartLinesLayer ) {
 			if(this.data.chartline.visible) {
 				this.children["background"].fillColor = this.data.color;
 			} else {
-				this.children["background"].fillColor = "#cccccc";
+				this.children["background"].fillColor = prefs.color.disabledButton;
 			}
 	
 			createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
