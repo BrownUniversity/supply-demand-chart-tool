@@ -57,6 +57,17 @@ var prefs = {
 			fontSize: 20,
 			fontWeight: "bold"
 		}
+	},
+	layout: {
+		supplyDemandButton: {
+			horizontalOffset: 75
+		}
+	},
+	ui: {
+		axisHoverArea: {
+			size: 80,
+			offset: 5
+		}
 	}
 };
 
@@ -239,7 +250,6 @@ function createChartDimensions(containerBounds) {
 	return chartBoundries;
 }
 
-
 /**
  * Create the chart and its elements.
  * @param {*} supplyDemandLineData 
@@ -302,14 +312,13 @@ function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
  * @param {*} chartBoundries 
  */
 function createPriceQuantityHoverAreas(chartBoundries) {
-	var hoverAreaSize = 80;
-
-	var leftOrigin = new Point(chartBoundries.topLeft.x - hoverAreaSize, chartBoundries.topLeft.y);
-	var leftSize = new Size(hoverAreaSize, chartBoundries.height);
+	var leftOriginX = chartBoundries.topLeft.x - prefs.ui.axisHoverArea.size - prefs.ui.axisHoverArea.offset;
+	var leftOrigin = new Point(leftOriginX, chartBoundries.topLeft.y);
+	var leftSize = new Size(prefs.ui.axisHoverArea.size, chartBoundries.height);
 	var leftAxisHoverArea = new Path.Rectangle(leftOrigin, leftSize);
 
-	var bottomOrigin = new Point(chartBoundries.bottomLeft.x, chartBoundries.bottomLeft.y);
-	var bottomSize = new Size(chartBoundries.width, hoverAreaSize);
+	var bottomOrigin = new Point(chartBoundries.bottomLeft.x, chartBoundries.bottomLeft.y + prefs.ui.axisHoverArea.offset);
+	var bottomSize = new Size(chartBoundries.width, prefs.ui.axisHoverArea.size);
 	var bottomAxisHoverArea = new Path.Rectangle(bottomOrigin, bottomSize);
 
 	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0, 0.1);
@@ -584,7 +593,7 @@ function createChartLineButtons( chartLinesLayer ) {
 
 	buttons.pivot = buttons.bounds.topRight;
 	buttons.position = safeBox.topRight;
-	buttons.position.x += 110;
+	buttons.position.x += prefs.layout.supplyDemandButton.horizontalOffset;
 }
 
 /**
