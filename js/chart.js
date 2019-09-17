@@ -13,7 +13,8 @@ var prefs = {
 			"#3182bd",  // Medium orange
 			"#6baed6",  // Light blue
 		],
-		disabledButton: "#cccccc"
+		disabledButton: "#cccccc",
+		buttonText: "white"
 	},
 	margin: {
 		left: 125,
@@ -61,6 +62,9 @@ var prefs = {
 	},
 	layout: {
 		supplyDemandButton: {
+			width: 50,
+			height: 32, 
+			spacing: 10,
 			horizontalOffset: 75
 		}
 	},
@@ -538,8 +542,8 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 
 function createChartLineButtons( chartLinesLayer ) {
 	var chartLines = chartLinesLayer.children;
-	var buttonSize = new Size(50, 32);
-	var buttonSpacing = 10;
+	var buttonSize = new Size(prefs.layout.supplyDemandButton.width, prefs.layout.supplyDemandButton.height);
+	var buttonSpacing = prefs.layout.supplyDemandButton.spacing;
 
 	var buttons = new Group({name: "buttons"});
 
@@ -569,7 +573,7 @@ function createChartLineButtons( chartLinesLayer ) {
 		var label = new PointText( {
 			point: buttonPosition,
 			name: currentLine.data.label,
-			fillColor: "white",
+			fillColor: prefs.color.buttonText,
 			content: currentLine.data.label,
 			justification: "center"
 		} );
