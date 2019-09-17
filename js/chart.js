@@ -3,15 +3,15 @@
 // Preferences: style, color, margins etc.
 var prefs = {
 	color: {
-		supply: [  //Oranges
-			"#e6550d",
-			"#fd8d3c",
-			"#fdbe85",
+		supply: [
+			"#e6550d",  // Dark orange
+			"#fd8d3c",  // Medium orange
+			"#fdbe85",  // Light orange
 		],
-		demand: [  //Blues
-			"#08519c",
-			"#3182bd",
-			"#6baed6",
+		demand: [  
+			"#08519c",  // Dark blue
+			"#3182bd",  // Medium orange
+			"#6baed6",  // Light blue
 		]
 	},
 	margin: {
