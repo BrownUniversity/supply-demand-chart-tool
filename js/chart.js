@@ -36,6 +36,10 @@ var prefs = {
 			strokeWidth: 3,
 			strokeCap: "butt",
 			dashArray: [10, 6]
+		},
+		axis: {
+			strokeColor: "black",
+			strokeWidth: 2,
 		}
 	}
 };
@@ -84,11 +88,6 @@ var priceQuantityLinesData = [];
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
-
-var axisLineStyles = {
-	strokeColor: "black",
-	strokeWidth: 2,
-}
 
 var axisLabelStyles = {
 	color: "black",
@@ -293,10 +292,10 @@ function updateChart(supplyDemandLineData, priceQuantityLineData, chartBoundries
  */
 function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
 	var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
-	leftAxis.style = axisLineStyles;
+	leftAxis.style = prefs.lineStyle.axis;
 
 	var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
-	bottomAxis.style = axisLineStyles;
+	bottomAxis.style = prefs.lineStyle.axis;
 
 	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
 }
