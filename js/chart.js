@@ -47,6 +47,10 @@ var prefs = {
 			color: "black",
 			fontFamily: "'Roboto', 'sans-serif'",
 			fontSize: 28
+		},
+		supplyDemandLabel: {
+			fontFamily: "'Roboto', 'sans-serif'",
+			fontSize: 36
 		}
 	}
 };
@@ -95,11 +99,6 @@ var priceQuantityLinesData = [];
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
-
-var chartLineLabelStyles = {
-	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 36
-}
 
 var buttonLabelStyles = {
 	fontFamily: "'Roboto', 'sans-serif'",
@@ -426,7 +425,7 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
 			name: "label",
 			fillColor: lineData.color,
 			content: lineData.label,
-			style: chartLineLabelStyles
+			style: prefs.textStyle.supplyDemandLabel
 		} );
 
 		//Create new path
@@ -489,7 +488,7 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 		name: "label",
 		fillColor: lineData.color,
 		content: lineData.label,
-		style: chartLineLabelStyles
+		style: prefs.textStyle.supplyDemandLabel
 	} );
 
 	// //Create new group
