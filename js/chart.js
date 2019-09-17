@@ -51,6 +51,11 @@ var prefs = {
 		supplyDemandLabel: {
 			fontFamily: "'Roboto', 'sans-serif'",
 			fontSize: 36
+		},
+		buttonLabel: {
+			fontFamily: "'Roboto', 'sans-serif'",
+			fontSize: 20,
+			fontWeight: "bold"
 		}
 	}
 };
@@ -99,12 +104,6 @@ var priceQuantityLinesData = [];
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
-
-var buttonLabelStyles = {
-	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 20,
-	fontWeight: "bold"
-}
 
 //Create the charts
 var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
@@ -566,7 +565,7 @@ function createChartLineButtons( chartLinesLayer ) {
 			content: currentLine.data.label,
 			justification: "center"
 		} );
-		label.style = buttonLabelStyles;
+		label.style = prefs.textStyle.buttonLabel;
 		label.position.y += 5;  //Centers text vertically in box
 		
 		button.onMouseDown = function () {
