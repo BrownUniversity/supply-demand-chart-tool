@@ -41,6 +41,13 @@ var prefs = {
 			strokeColor: "black",
 			strokeWidth: 2,
 		}
+	},
+	textStyle: {
+		axisLabel: {
+			color: "black",
+			fontFamily: "'Roboto', 'sans-serif'",
+			fontSize: 28
+		}
 	}
 };
 
@@ -88,12 +95,6 @@ var priceQuantityLinesData = [];
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
-
-var axisLabelStyles = {
-	color: "black",
-	fontFamily: "'Roboto', 'sans-serif'",
-	fontSize: 28
-}
 
 var chartLineLabelStyles = {
 	fontFamily: "'Roboto', 'sans-serif'",
@@ -391,15 +392,15 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 	var xLabelPosition = new Point(chartBoundries.bottomRight);
 	xLabelPosition.y += 75;
 	var xAxisLabel = new PointText( xLabelPosition );
-	xAxisLabel.style = axisLabelStyles;
+	xAxisLabel.style = prefs.textStyle.axisLabel;
 	xAxisLabel.justification = "right";
 	xAxisLabel.content = xAxisLabelText;
 
 	var yLabelPosition = new Point(chartBoundries.topLeft);
 	yLabelPosition.x -= 60;
-	yLabelPosition.y += axisLabelStyles.fontSize;
+	yLabelPosition.y += prefs.textStyle.axisLabel.fontSize;
 	var yAxisLabel = new PointText( yLabelPosition );
-	yAxisLabel.style = axisLabelStyles;
+	yAxisLabel.style = prefs.textStyle.axisLabel;
 	yAxisLabel.justification = "right";
 	yAxisLabel.content = yAxisLabelText;	
 }
