@@ -229,8 +229,6 @@ function createSafeBoxDimensions(containerBounds, margin){
  * @param {*} margin 
  */
 function createChartDimensions(containerBounds) {
-	var xAxisLabelMargin = 75;
-	
 	var chartDimension = Math.min(containerBounds.width, containerBounds.height);
 	
 	// Chart settings
