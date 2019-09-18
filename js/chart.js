@@ -80,44 +80,50 @@ var prefs = {
 	}
 };
 
+// Data: supply, demand, price and quantity line position and visibility.
+var data = {
+	supplyDemandLines: [
+		{
+			label: "S₀",
+			type: "supply",
+			start: 0.2,
+			end: 0.7,
+			color: prefs.color.supply[0],
+			visible: true
+		},
+		{
+			label: "S₁",
+			type: "supply",
+			start: 0.3,
+			end: 0.8,
+			color: prefs.color.supply[2],
+			visible: false
+		},
+		{
+			label: "D₀",
+			type: "demand",
+			start: 0.7,
+			end: 0.2,
+			color: prefs.color.demand[0],
+			visible: true
+		},
+		{
+			label: "D₁",
+			type: "demand",
+			start: 0.8,
+			end: 0.3,
+			color: prefs.color.demand[2],
+			visible: false
+		}
+	],
+	priceQuantityLines: [
+
+	]
+}
+
 var xAxisLabelText = "Quantity";
 var yAxisLabelText = "Price";
 
-//Supply and demand lines of chart 
-var supplyDemandLineData = [
-	{
-		label: "S₀",
-		type: "supply",
-		start: 0.2,
-		end: 0.7,
-		color: prefs.color.supply[0],
-		visible: true
-	},
-	{
-		label: "S₁",
-		type: "supply",
-		start: 0.3,
-		end: 0.8,
-		color: prefs.color.supply[2],
-		visible: false
-	},
-	{
-		label: "D₀",
-		type: "demand",
-		start: 0.7,
-		end: 0.2,
-		color: prefs.color.demand[0],
-		visible: true
-	},
-	{
-		label: "D₁",
-		type: "demand",
-		start: 0.8,
-		end: 0.3,
-		color: prefs.color.demand[2],
-		visible: false
-	}
-];
 
 //Price and quantity lines of chart
 var priceQuantityLinesData = [];
@@ -128,7 +134,7 @@ var tempPriceQuantityLineData = null;
 //Create the charts
 var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 var chartBoundries = createChartDimensions(safeBox);
-createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
+createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
 
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
@@ -197,7 +203,7 @@ function onMouseDrag(event){
 			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
 		}	
 
-		createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
+		createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
 	}
 }
 
@@ -370,7 +376,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		};
 
 		priceQuantityLinesData = [priceQuantityLineData];
-		createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
+		createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
 	}
 
 	bottomAxisHoverArea.onMouseUp = function(event) {
@@ -381,7 +387,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		};
 
 		priceQuantityLinesData = [priceQuantityLineData];
-		createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
+		createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
 	}
 
 	//Function for removing temporary lines
@@ -592,7 +598,7 @@ function createChartLineButtons( chartLinesLayer ) {
 				this.children["background"].fillColor = prefs.color.disabledButton;
 			}
 	
-			createChart(supplyDemandLineData, priceQuantityLinesData, chartBoundries);
+			createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
 		};
 
 		button.addChild(label);	
