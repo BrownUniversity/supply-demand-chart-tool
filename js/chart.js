@@ -261,7 +261,7 @@ function createChartDimensions(containerBounds) {
 
 /**
  * Create the chart and its elements.
- * @param {*} data.supplyDemandLines 
+ * @param {*} data 
  * @param {*} chartBoundries 
  */
 function createChart( data, chartBoundries) {
@@ -639,6 +639,7 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
  * @param {Number} x Value should between  0 an 1
  * @param {Number} y Value should between  0 an 1
  * @param {Rectangle} chartBoundries 
+ * @return {Point} 
  */
 function getChartPosition( x, y, chartBoundries ) {
 	var xPos = chartBoundries.left + chartBoundries.width * x;
@@ -650,7 +651,8 @@ function getChartPosition( x, y, chartBoundries ) {
 /**
  * Given a point within the chart/canvas space return a value between 0 and 1.0
  * @param {Point} point 
- * @param {Rectangle} chartBoundries 
+ * @param {Rectangle} chartBoundries
+ * @return {Point}
  */
 function getUnitPosition( point, chartBoundries ) {
 	var x = (point.x - chartBoundries.left) / chartBoundries.width;
