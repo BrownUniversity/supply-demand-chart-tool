@@ -116,17 +116,11 @@ var data = {
 			visible: false
 		}
 	],
-	priceQuantityLines: [
-
-	]
+	priceQuantityLines: []
 }
 
 var xAxisLabelText = "Quantity";
 var yAxisLabelText = "Price";
-
-
-//Price and quantity lines of chart
-var priceQuantityLinesData = [];
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
@@ -134,7 +128,7 @@ var tempPriceQuantityLineData = null;
 //Create the charts
 var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 var chartBoundries = createChartDimensions(safeBox);
-createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
+createChart(data.supplyDemandLines, data.priceQuantityLines, chartBoundries);
 
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
@@ -203,7 +197,7 @@ function onMouseDrag(event){
 			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
 		}	
 
-		createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
+		createChart(data.supplyDemandLines, data.priceQuantityLines, chartBoundries);
 	}
 }
 
@@ -222,7 +216,7 @@ function onResize(){
 		return chartLineGroup.data;
 	});
 
-	createChart(data, priceQuantityLinesData, chartBoundries);
+	createChart(data, data.priceQuantityLines, chartBoundries);
 }
 
 /**
@@ -375,8 +369,8 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 			value: getUnitPosition(event.point, chartBoundries).y
 		};
 
-		priceQuantityLinesData = [priceQuantityLineData];
-		createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
+		data.priceQuantityLines = [priceQuantityLineData];
+		createChart(data.supplyDemandLines, data.priceQuantityLines, chartBoundries);
 	}
 
 	bottomAxisHoverArea.onMouseUp = function(event) {
@@ -386,8 +380,8 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 			value: getUnitPosition(event.point, chartBoundries).x
 		};
 
-		priceQuantityLinesData = [priceQuantityLineData];
-		createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
+		data.priceQuantityLines = [priceQuantityLineData];
+		createChart(data.supplyDemandLines, data.priceQuantityLines, chartBoundries);
 	}
 
 	//Function for removing temporary lines
@@ -470,9 +464,11 @@ function createSupplyDemandLines( chartLineData, chartBoundries ){
  * @param {*} chartBoundries 
  */
 function createPriceQuantityLines( priceQuantityLineData, chartBoundries ) {
-	for(var i = 0; i < priceQuantityLineData.length; i++){
-		lineData = priceQuantityLineData[i];
-		drawPriceQuantityLine( lineData, chartBoundries, prefs.lineStyle.intersection );
+	if(priceQuantityLineData) {
+		for(var i = 0; i < priceQuantityLineData.length; i++){
+			lineData = priceQuantityLineData[i];
+			drawPriceQuantityLine( lineData, chartBoundries, prefs.lineStyle.intersection );
+		}
 	}
 }
 
@@ -598,7 +594,7 @@ function createChartLineButtons( chartLinesLayer ) {
 				this.children["background"].fillColor = prefs.color.disabledButton;
 			}
 	
-			createChart(data.supplyDemandLines, priceQuantityLinesData, chartBoundries);
+			createChart(data.supplyDemandLines, data.priceQuantityLines, chartBoundries);
 		};
 
 		button.addChild(label);	
