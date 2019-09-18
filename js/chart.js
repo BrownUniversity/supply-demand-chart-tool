@@ -20,7 +20,7 @@ var prefs = {
 		left: 125,
 		right: 110,
 		top: 25,
-		bottom: 25
+		bottom: 75
 	},
 	lineStyle: {
 		supplyDemand: {
