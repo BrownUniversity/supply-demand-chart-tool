@@ -126,9 +126,11 @@ var yAxisLabelText = "Price";
 var tempPriceQuantityLineData = null;
 
 //Create the charts
+createChart(data, prefs);
+
 var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 var chartBoundries = createChartDimensions(safeBox);
-createChart(data, chartBoundries);
+
 
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
@@ -197,7 +199,7 @@ function onMouseDrag(event){
 			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
 		}	
 
-		createChart(data, chartBoundries);
+		createChart(data, prefs);
 	}
 }
 
@@ -212,7 +214,7 @@ function onResize(){
 	safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 	chartBoundries = createChartDimensions(safeBox);
 
-	createChart(data, chartBoundries);
+	createChart(data, prefs);
 }
 
 /**
@@ -260,7 +262,10 @@ function createChartDimensions(containerBounds) {
  * @param {*} data 
  * @param {*} chartBoundries 
  */
-function createChart( data, chartBoundries) {
+function createChart( data, prefs) {
+  var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
+	var chartBoundries = createChartDimensions(safeBox);
+
 	project.clear();
 	
 	project.addLayer(new Layer({name: "equilibriumLines"}));
@@ -366,7 +371,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		};
 
 		data.priceQuantityLines = [priceQuantityLineData];
-		createChart(data, chartBoundries);
+		createChart(data, prefs);
 	}
 
 	bottomAxisHoverArea.onMouseUp = function(event) {
@@ -377,7 +382,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		};
 
 		data.priceQuantityLines = [priceQuantityLineData];
-		createChart(data, chartBoundries);
+		createChart(data, prefs);
 	}
 
 	//Function for removing temporary lines
@@ -583,13 +588,14 @@ function createChartLineButtons( chartLinesLayer ) {
 				this.children["background"].fillColor = prefs.color.disabledButton;
 			}
 	
-			createChart(data, chartBoundries);
+			createChart(data, prefs);
 		};
 
 		button.addChild(label);	
 		buttons.addChild(button);
 	}
 
+	var safeBox = createSafeBoxDimensions(view.bounds, prefs.margin)
 	buttons.pivot = buttons.bounds.topRight;
 	buttons.position = safeBox.topRight;
 	buttons.position.x += prefs.layout.supplyDemandButton.horizontalOffset;
