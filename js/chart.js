@@ -212,10 +212,6 @@ function onResize(){
 	safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 	chartBoundries = createChartDimensions(safeBox);
 
-	// var data = project.layers["supplyDemandLines"].children.map( function (chartLineGroup) {
-	// 	return chartLineGroup.data;
-	// });
-
 	createChart(data, chartBoundries);
 }
 
@@ -506,13 +502,6 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 		content: lineData.label,
 		style: prefs.textStyle.supplyDemandLabel
 	} );
-
-	// //Create new group
-	// var chartLineGroup = new Group([ linePath, label ])
-	// chartLineGroup.name = lineData.label;
-	// chartLineGroup.data = lineData;
-
-	// chartLineGroup.visible = lineData.visible;
 
 	//Find intersections between line and supply and demand lines
 	var intersections = [];
