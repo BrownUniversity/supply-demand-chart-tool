@@ -131,7 +131,6 @@ createChart(data, prefs);
 var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 var chartBoundries = createChartDimensions(safeBox);
 
-
 //Area to register boundaries of dragging of chart lines
 var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
 
@@ -244,7 +243,6 @@ function createSafeBoxDimensions(containerBounds, margin){
 /**
  * Create chart dimensions based on a container rectangle and a margin to offset from that rectagle
  * @param {*} containerBounds 
- * @param {*} margin 
  */
 function createChartDimensions(containerBounds) {
 	var chartDimension = Math.min(containerBounds.width, containerBounds.height);
@@ -260,12 +258,9 @@ function createChartDimensions(containerBounds) {
 /**
  * Create the chart and its elements.
  * @param {*} data 
- * @param {*} chartBoundries 
+ * @param {*} prefs 
  */
 function createChart( data, prefs) {
-  var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
-	var chartBoundries = createChartDimensions(safeBox);
-
 	project.clear();
 	
 	project.addLayer(new Layer({name: "equilibriumLines"}));
@@ -275,32 +270,38 @@ function createChart( data, prefs) {
 	project.addLayer(new Layer({name: "supplyDemandLines"}));
 	project.addLayer(new Layer({name: "ui"}));
 
+	updateChart(data, prefs);
+}
+
+/**
+ * Update contents of chart and its boundaries.
+ * @param {*} data 
+ * @param {*} prefs 
+ */
+function updateChart(data, prefs) {
+	var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
+	var chartBoundries = createChartDimensions(safeBox);
+
 	project.layers["axes"].activate();
+	project.layers["axes"].removeChildren();
 	createPriceQuantityHoverAreas(chartBoundries);
 	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
 	
 	project.layers["supplyDemandLines"].activate();
+	project.layers["supplyDemandLines"].removeChildren();
 	createSupplyDemandLines( data.supplyDemandLines, chartBoundries );
 
 	project.layers["equilibriumLines"].activate();
+	project.layers["equilibriumLines"].removeChildren();
 	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
 
 	project.layers["priceQuantityLines"].activate();
+	project.layers["priceQuantityLines"].removeChildren();
 	createPriceQuantityLines( data.priceQuantityLines, chartBoundries );
 
 	project.layers["ui"].activate();
+	project.layers["ui"].removeChildren();
 	createChartLineButtons( project.layers["supplyDemandLines"] );
-}
-
-function updateChart(supplyDemandLineData, priceQuantityLineData, chartBoundries) {
-	project.layers["supplyDemandLines"].activate();
-	createSupplyDemandLines( supplyDemandLineData, chartBoundries );
-
-	project.layers["equilibriumLines"].activate();
-	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
-
-	project.layers["priceQuantityLines"].activate();
-	createPriceQuantityLines( priceQuantityLineData, chartBoundries );	
 }
 
 /**
