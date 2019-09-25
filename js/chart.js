@@ -65,7 +65,7 @@ var prefs = {
 			width: 50,
 			height: 32, 
 			spacing: 10,
-			horizontalOffset: 75,
+			horizontalOffset: 110,
 			cornerRadius: 10
 		},
 		priceQuantityLineLabel: {
