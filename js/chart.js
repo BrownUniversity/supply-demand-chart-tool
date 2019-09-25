@@ -198,7 +198,7 @@ function onMouseDrag(event){
 			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
 		}	
 
-		createChart(data, prefs);
+		updateChart(data, prefs);
 	}
 }
 
@@ -213,7 +213,7 @@ function onResize(){
 	safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 	chartBoundries = createChartDimensions(safeBox);
 
-	createChart(data, prefs);
+	updateChart(data, prefs);
 }
 
 /**
@@ -372,7 +372,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		};
 
 		data.priceQuantityLines = [priceQuantityLineData];
-		createChart(data, prefs);
+		updateChart(data, prefs);
 	}
 
 	bottomAxisHoverArea.onMouseUp = function(event) {
@@ -383,7 +383,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		};
 
 		data.priceQuantityLines = [priceQuantityLineData];
-		createChart(data, prefs);
+		updateChart(data, prefs);
 	}
 
 	//Function for removing temporary lines
@@ -589,7 +589,7 @@ function createChartLineButtons( chartLinesLayer ) {
 				this.children["background"].fillColor = prefs.color.disabledButton;
 			}
 	
-			createChart(data, prefs);
+			updateChart(data, prefs);
 		};
 
 		button.addChild(label);	
