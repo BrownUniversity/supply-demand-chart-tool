@@ -274,14 +274,16 @@ function createChart( data, prefs) {
 }
 
 /**
- * Update contents of chart and its boundaries.
+ * Update elements of chart and its boundaries.
  * @param {*} data 
  * @param {*} prefs 
  */
 function updateChart(data, prefs) {
+	//Reset chart boundaries
 	var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
 	var chartBoundries = createChartDimensions(safeBox);
 
+	//For each layer remove children and recreate them.
 	project.layers["axes"].activate();
 	project.layers["axes"].removeChildren();
 	createPriceQuantityHoverAreas(chartBoundries);
