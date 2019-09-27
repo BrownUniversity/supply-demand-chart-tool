@@ -119,8 +119,8 @@ var data = {
 	priceQuantityLines: []
 }
 
-var xAxisLabelText = "Quantity";
-var yAxisLabelText = "Price";
+var xAxisLabelText = "";  // Quantity
+var yAxisLabelText = "";  // Price
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
