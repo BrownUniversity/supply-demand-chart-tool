@@ -1,4 +1,4 @@
-/*global Point, Path, Size, Rectangle, Layer, Group, PointText, project, view*/
+/*global Point, Path, Size, Rectangle, Layer, Group, PointText, project, view, Color*/
 
 // Preferences: style, color, margins etc.
 var prefs = {
@@ -82,42 +82,48 @@ var prefs = {
 
 // Data: supply, demand, price and quantity line position and visibility.
 var data = {
-	supplyDemandLines: [
-		{
-			label: "S₀",
-			type: "supply",
-			start: 0.2,
-			end: 0.7,
-			color: prefs.color.supply[0],
-			visible: true
-		},
-		{
-			label: "S₁",
-			type: "supply",
-			start: 0.3,
-			end: 0.8,
-			color: prefs.color.supply[2],
-			visible: false
-		},
-		{
-			label: "D₀",
-			type: "demand",
-			start: 0.7,
-			end: 0.2,
-			color: prefs.color.demand[0],
-			visible: true
-		},
-		{
-			label: "D₁",
-			type: "demand",
-			start: 0.8,
-			end: 0.3,
-			color: prefs.color.demand[2],
-			visible: false
-		}
-	],
+	lines: [
+			{
+				index: 0,
+				label: "",
+				type: "supply",
+				start: 0.2,
+				end: 0.7,
+				color: prefs.color.supply[0],
+				visible: true
+			},
+			{
+				index: 1,
+				label: "",
+				type: "supply",
+				start: 0.3,
+				end: 0.8,
+				color: prefs.color.supply[2],
+				visible: false
+			},
+			{
+				index: 0,
+				label: "",
+				type: "demand",
+				start: 0.7,
+				end: 0.2,
+				color: prefs.color.demand[0],
+				visible: true
+			},
+			{
+				index: 1,
+				label: "",
+				type: "demand",
+				start: 0.8,
+				end: 0.3,
+				color: prefs.color.demand[2],
+				visible: false
+			}
+		],
 	priceQuantityLines: []
 }
+
+var pivotPointIndicatorCircle;
 
 var xAxisLabelText = "";  // Quantity
 var yAxisLabelText = "";  // Price
@@ -129,90 +135,17 @@ var tempPriceQuantityLineData = null;
 createChart(data, prefs);
 
 var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
-var chartBoundries = createChartDimensions(safeBox);
+var chartBoundaries = createChartDimensions(safeBox);
 
 //Area to register boundaries of dragging of chart lines
-var dragBoundries = new Rectangle(view.bounds.x, chartBoundries.y, view.bounds.width, chartBoundries.height);
-
-// Options for selecting objects
-var hitOptions = {
-	segments: true,
-	stroke: true,
-	fill: false,
-	tolerance: 5,
-	match: function (hitResults) {
-		if(hitResults.item.layer === project.layers["priceQuantityLines"]){
-			return true;
-		}
-		if(hitResults.item.layer === project.layers["supplyDemandLines"]) {
-			return true;
-		}
-		return false;
-	}
-};
+var dragBoundaries = new Rectangle(view.bounds.x, chartBoundaries.y, view.bounds.width, chartBoundaries.height);
 
 var selectedSegment, selectedPath;
-
-/* exported onMouseDown */
-function onMouseDown(event){
-	var hitResults = project.hitTest(event.point, hitOptions);
-	
-	//If not hit results nothing to do
-	if(!hitResults) {
-		return;
-	}
-	
-	selectedPath = hitResults.item;
-	
-	if( hitResults.type == 'segment') {
-		selectedSegment = hitResults.segment;
-	} else if( hitResults.type == 'stroke' ) {
-		selectedSegment = null;
-	} else {
-		selectedPath = null;
-	}
-}
-
-/* exported onMouseDrag */
-function onMouseDrag(event){
-	
-	if( event.point.isInside(dragBoundries) ) {
-		if( selectedPath ) {
-			if(selectedSegment) {
-				selectedSegment.point.y = constrain(selectedSegment.point.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
-			} else {
-				
-				var topEdge = selectedPath.bounds.top + event.delta.y;
-				var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
-				
-				//Check to make sure part of path doesn't extend beyond the chart area.
-				if( topEdge > chartBoundries.top && bottomEdge < chartBoundries.bottom){
-					selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundries.top, chartBoundries.bottom);
-				}
-			}
-
-			var parentGroup = selectedPath.parent;
-			parentGroup.children["label"].point.y = selectedPath.lastSegment.point.y;
-			
-			parentGroup.data.start = getUnitPosition( selectedPath.firstSegment.point, chartBoundries ).y;
-			parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundries ).y;
-		}	
-
-		updateChart(data, prefs);
-	}
-}
-
-/* exported onMouseUp */
-function onMouseUp(){
-	selectedSegment = null;
-	selectedPath = null;
-}
 
 /* exported onResize */
 function onResize(){
 	safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
-	chartBoundries = createChartDimensions(safeBox);
-
+	chartBoundaries = createChartDimensions(safeBox);
 	updateChart(data, prefs);
 }
 
@@ -249,10 +182,10 @@ function createChartDimensions(containerBounds) {
 	
 	// Chart settings
 	var chartSize = new Size(chartDimension, chartDimension);
-	var chartBoundries = new Rectangle( new Point(0, 0), chartSize);
-	chartBoundries.topCenter = containerBounds.topCenter;
+	var chartBoundaries = new Rectangle( new Point(0, 0), chartSize);
+	chartBoundaries.topCenter = containerBounds.topCenter;
 
-	return chartBoundries;
+	return chartBoundaries;
 }
 
 /**
@@ -263,6 +196,14 @@ function createChartDimensions(containerBounds) {
 function createChart( data, prefs) {
 	project.clear();
 	
+	project.addLayer(new Layer({name: "prototype"}));
+	
+	pivotPointIndicatorCircle = Path.Circle({center: [0,0], radius: 30});
+	pivotPointIndicatorCircle.strokeWidth = 1;
+	pivotPointIndicatorCircle.fillColor = "#eee";
+	pivotPointIndicatorCircle.visible = false;
+	project.layers["prototype"].addChild(pivotPointIndicatorCircle);
+
 	project.addLayer(new Layer({name: "equilibriumLines"}));
 	project.addLayer(new Layer({name: "tempPriceQuantityLines"}));
 	project.addLayer(new Layer({name: "priceQuantityLines"}));
@@ -281,25 +222,25 @@ function createChart( data, prefs) {
 function updateChart(data, prefs) {
 	//Reset chart boundaries
 	var safeBox = createSafeBoxDimensions( view.bounds, prefs.margin );
-	var chartBoundries = createChartDimensions(safeBox);
+	var chartBoundaries = createChartDimensions(safeBox);
 
 	//For each layer remove children and recreate them.
 	project.layers["axes"].activate();
 	project.layers["axes"].removeChildren();
-	createPriceQuantityHoverAreas(chartBoundries);
-	createAxes( xAxisLabelText, yAxisLabelText, chartBoundries );
+	createPriceQuantityHoverAreas(chartBoundaries);
+	createAxes( xAxisLabelText, yAxisLabelText, chartBoundaries );
 	
 	project.layers["supplyDemandLines"].activate();
 	project.layers["supplyDemandLines"].removeChildren();
-	createSupplyDemandLines( data.supplyDemandLines, chartBoundries );
+	createSupplyDemandLines( data.lines, chartBoundaries );
 
 	project.layers["equilibriumLines"].activate();
 	project.layers["equilibriumLines"].removeChildren();
-	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundries );
+	createIntersectionLines( project.layers["supplyDemandLines"], chartBoundaries );
 
 	project.layers["priceQuantityLines"].activate();
 	project.layers["priceQuantityLines"].removeChildren();
-	createPriceQuantityLines( data.priceQuantityLines, chartBoundries );
+	createPriceQuantityLines( data.priceQuantityLines, chartBoundaries );
 
 	project.layers["ui"].activate();
 	project.layers["ui"].removeChildren();
@@ -308,30 +249,30 @@ function updateChart(data, prefs) {
 
 /**
  * Create layer with lines for charts axis 
- * @param {Rectangle} chartBoundries 
+ * @param {Rectangle} chartBoundaries 
  */
-function createAxes( xAxisLabelText, yAxisLabelText, chartBoundries ) {
-	var leftAxis = new Path.Line(chartBoundries.topLeft, chartBoundries.bottomLeft);
+function createAxes( xAxisLabelText, yAxisLabelText, chartBoundaries ) {
+	var leftAxis = new Path.Line(chartBoundaries.topLeft, chartBoundaries.bottomLeft);
 	leftAxis.style = prefs.lineStyle.axis;
 
-	var bottomAxis = new Path.Line(chartBoundries.bottomLeft, chartBoundries.bottomRight);
+	var bottomAxis = new Path.Line(chartBoundaries.bottomLeft, chartBoundaries.bottomRight);
 	bottomAxis.style = prefs.lineStyle.axis;
 
-	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries );
+	createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundaries );
 }
 
 /**
  * Create area near axes that when user hovers will draw temporary price or quantity lines.
- * @param {*} chartBoundries 
+ * @param {*} chartBoundaries 
  */
-function createPriceQuantityHoverAreas(chartBoundries) {
-	var leftOriginX = chartBoundries.topLeft.x - prefs.ui.axisHoverArea.size - prefs.ui.axisHoverArea.offset;
-	var leftOrigin = new Point(leftOriginX, chartBoundries.topLeft.y);
-	var leftSize = new Size(prefs.ui.axisHoverArea.size, chartBoundries.height);
+function createPriceQuantityHoverAreas(chartBoundaries) {
+	var leftOriginX = chartBoundaries.topLeft.x - prefs.ui.axisHoverArea.size - prefs.ui.axisHoverArea.offset;
+	var leftOrigin = new Point(leftOriginX, chartBoundaries.topLeft.y);
+	var leftSize = new Size(prefs.ui.axisHoverArea.size, chartBoundaries.height);
 	var leftAxisHoverArea = new Path.Rectangle(leftOrigin, leftSize);
 
-	var bottomOrigin = new Point(chartBoundries.bottomLeft.x, chartBoundries.bottomLeft.y + prefs.ui.axisHoverArea.offset);
-	var bottomSize = new Size(chartBoundries.width, prefs.ui.axisHoverArea.size);
+	var bottomOrigin = new Point(chartBoundaries.bottomLeft.x, chartBoundaries.bottomLeft.y + prefs.ui.axisHoverArea.offset);
+	var bottomSize = new Size(chartBoundaries.width, prefs.ui.axisHoverArea.size);
 	var bottomAxisHoverArea = new Path.Rectangle(bottomOrigin, bottomSize);
 
 	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0, 0.1);
@@ -345,10 +286,10 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		tempPriceQuantityLineData = {
 			label: "",
 			type: "price",
-			value: getUnitPosition(event.point, chartBoundries).y
+			value: getUnitPosition(event.point, chartBoundaries).y
 		};
 
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, prefs.lineStyle.intersectionHover);
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
 	}
 	
 	//Update any temporary quantity (vertical) lines
@@ -359,10 +300,10 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		tempPriceQuantityLineData = {
 			label: "",
 			type: "quantity",
-			value: getUnitPosition(event.point, chartBoundries).x
+			value: getUnitPosition(event.point, chartBoundaries).x
 		};
 
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundries, prefs.lineStyle.intersectionHover);
+		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
 	}
 
 	//Create persistent line on mouse up
@@ -370,7 +311,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		priceQuantityLineData = {
 			label: "P₀",
 			type: "price",
-			value: getUnitPosition(event.point, chartBoundries).y
+			value: getUnitPosition(event.point, chartBoundaries).y
 		};
 
 		data.priceQuantityLines = [priceQuantityLineData];
@@ -381,7 +322,7 @@ function createPriceQuantityHoverAreas(chartBoundries) {
 		priceQuantityLineData = {
 			label: "Q₀",
 			type: "quantity",
-			value: getUnitPosition(event.point, chartBoundries).x
+			value: getUnitPosition(event.point, chartBoundaries).x
 		};
 
 		data.priceQuantityLines = [priceQuantityLineData];
@@ -404,17 +345,17 @@ function createPriceQuantityHoverAreas(chartBoundries) {
  * Create labels for chart axis
  * @param {String} xAxisLabelText 
  * @param {String} yAxisLabelText 
- * @param {Rectangle} chartBoundries 
+ * @param {Rectangle} chartBoundaries 
  */
-function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
-	var xLabelPosition = new Point(chartBoundries.bottomRight);
+function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundaries ){
+	var xLabelPosition = new Point(chartBoundaries.bottomRight);
 	xLabelPosition.y += 75;
 	var xAxisLabel = new PointText( xLabelPosition );
 	xAxisLabel.style = prefs.textStyle.axisLabel;
 	xAxisLabel.justification = "right";
 	xAxisLabel.content = xAxisLabelText;
 
-	var yLabelPosition = new Point(chartBoundries.topLeft);
+	var yLabelPosition = new Point(chartBoundaries.topLeft);
 	yLabelPosition.x -= 60;
 	yLabelPosition.y += prefs.textStyle.axisLabel.fontSize;
 	var yAxisLabel = new PointText( yLabelPosition );
@@ -426,68 +367,171 @@ function createAxisLabels( xAxisLabelText, yAxisLabelText, chartBoundries ){
 /**
  * Create the supply and demand lines of the chart
  * @param {*} chartLineData 
- * @param {*} chartBoundries 
+ * @param {*} chartBoundaries 
  */
-function createSupplyDemandLines( chartLineData, chartBoundries ){
+function createSupplyDemandLines( chartLineData, chartBoundaries ){
 	for(var i = 0; i < chartLineData.length; i++) {
 		var lineData = chartLineData[i];
-
-		var startPoint = getChartPosition(0, lineData.start, chartBoundries);
-		var endPoint = getChartPosition(1.0, lineData.end, chartBoundries);
-
-		//Create new label
-		var labelPosition = new Point(endPoint);
-		labelPosition.x += 10;
-
-		var label = new PointText( {
-			point: labelPosition,
-			name: "label",
-			fillColor: lineData.color,
-			content: lineData.label,
-			style: prefs.textStyle.supplyDemandLabel
-		} );
-
-		//Create new path
-		var linePath = new Path.Line(startPoint, endPoint);
-		linePath.style = prefs.lineStyle.supplyDemand;
-		linePath.strokeColor = lineData.color;
-		linePath.name = "path";
-
-		//Create new group
-		var chartLineGroup = new Group([ linePath, label ])
-		chartLineGroup.name = lineData.label;
-		chartLineGroup.data = lineData;
-
-		chartLineGroup.visible = lineData.visible;
+		createLine( lineData, chartBoundaries );
 	}
+}
+
+/**
+ * Create label for line given type, index and label from lineData.
+ * @param {*} lineData 
+ */
+function createLabel (lineData) {
+	var subscriptNumerals = ['\u2080','\u2081','\u2082','\u2083','\u2084','\u2085','\u2086','\u2087','\u2088','\u2089'];
+	return lineData.label === '' ? lineData.type[0].toUpperCase() + subscriptNumerals[lineData.index] : lineData.label;
+}
+
+/**
+ * Create a single chart line supply or demand
+ * @param {*} lineData Data representing the line (start and end points, label, etc.)
+ * @param {*} chartBoundaries Boundaries of the chart
+ */
+function createLine( lineData, chartBoundaries ) {
+
+	var startPoint = getChartPosition(0, lineData.start, chartBoundaries);
+	var endPoint = getChartPosition(1.0, lineData.end, chartBoundaries);
+
+	//Create new label
+	var labelPosition = new Point(endPoint);
+	labelPosition.x += 10;
+
+	var label = new PointText( {
+		point: labelPosition,
+		name: "label",
+		fillColor: lineData.color,
+		content: createLabel(lineData),
+		style: prefs.textStyle.supplyDemandLabel
+	} );
+
+	//Create new path
+	var linePath = new Path.Line(startPoint, endPoint);
+	linePath.style = prefs.lineStyle.supplyDemand;
+	linePath.strokeColor = lineData.color;
+	linePath.name = "path";
+
+	linePath.onMouseDown = function(event) {
+		var hitResults = this.hitTest(event.point);
+
+		if(!hitResults) {
+			return;
+		}
+
+		selectedPath = hitResults.item;
+
+		if( hitResults.type == 'segment') {
+			//Start rotation
+			selectedSegment = hitResults.segment;
+		} else if( hitResults.type == 'stroke' ) {
+			selectedSegment = null;
+		} else {
+			selectedPath = null;
+		}
+	}
+
+	linePath.onMouseDrag = function (event){
+		if( event.point.isInside(dragBoundaries) ) {
+			if( selectedPath ) {
+				var parentGroup = selectedPath.parent;
+
+				if(selectedSegment) {
+
+					//Rotate line around intersection with counterpart
+					
+					var supplyDemandLines = project.layers["supplyDemandLines"].children;
+					
+					var pivot = findPivot(parentGroup, supplyDemandLines);
+					
+					if( pivot === null) {
+						if(selectedSegment === selectedPath.firstSegment) {
+							pivot = new Point(selectedPath.lastSegment.point);
+						} else {
+							pivot = new Point(selectedPath.firstSegment.point);
+						}
+					}
+
+					var intersection = getLineBoundaryIntersections(event.point, pivot, chartBoundaries);
+
+					//Prevent line from sliding pivot when opposite end hits bounds
+					if(  intersection.start.y < chartBoundaries.bottom 
+						&& intersection.start.y > chartBoundaries.top
+						&& intersection.end.y < chartBoundaries.bottom 
+						&& intersection.end.y > chartBoundaries.top
+						) {
+							selectedPath.firstSegment.point.y = intersection.start.y;
+							selectedPath.lastSegment.point.y = intersection.end.y;
+						}
+
+					
+
+					pivotPointIndicatorCircle.position = pivot;
+					pivotPointIndicatorCircle.visible = true;
+				} else {
+					//Drag line horizontally or vertically
+					
+					var topEdge = selectedPath.bounds.top + event.delta.y;
+					var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
+					
+					//Check to make sure part of path doesn't extend beyond the chart area.
+					if( topEdge > chartBoundaries.top && bottomEdge < chartBoundaries.bottom){
+						selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundaries.top, chartBoundaries.bottom);
+					}
+				}
+
+				parentGroup.children["label"].point.y = selectedPath.lastSegment.point.y;
+				
+				parentGroup.data.start = getUnitPosition( selectedPath.firstSegment.point, chartBoundaries ).y;
+				parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundaries ).y;
+			}
+	
+			updateChart(data, prefs);
+		}
+	}
+
+	linePath.onMouseUp = function (event) {
+		selectedPath = false;
+		selectedSegment = false;
+
+		pivotPointIndicatorCircle.visible = false;
+	}
+
+	//Create new group
+	var chartLineGroup = new Group([ linePath, label ])
+	chartLineGroup.name = lineData.label;
+	chartLineGroup.data = lineData;
+
+	chartLineGroup.visible = lineData.visible;
 }
 
 /**
  * Create horizontal and vertical lines representing price or quantity
  * @param {*} priceQuantityLineData 
- * @param {*} chartBoundries 
+ * @param {*} chartBoundaries 
  */
-function createPriceQuantityLines( priceQuantityLineData, chartBoundries ) {
+function createPriceQuantityLines( priceQuantityLineData, chartBoundaries ) {
 	if(priceQuantityLineData) {
 		for(var i = 0; i < priceQuantityLineData.length; i++){
 			lineData = priceQuantityLineData[i];
-			drawPriceQuantityLine( lineData, chartBoundries, prefs.lineStyle.intersection );
+			drawPriceQuantityLine( lineData, chartBoundaries, prefs.lineStyle.intersection );
 		}
 	}
 }
 
-function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
+function drawPriceQuantityLine( lineData, chartBoundaries, lineStyle ) {
 	var startPoint, endPoint;
 
 	//Find start and end points
 	if(lineData.type === "price") {
 		//Draw horizontal line for price
-		startPoint = getChartPosition(0, lineData.value, chartBoundries);
-		endPoint = getChartPosition(1.0, lineData.value, chartBoundries);
+		startPoint = getChartPosition(0, lineData.value, chartBoundaries);
+		endPoint = getChartPosition(1.0, lineData.value, chartBoundaries);
 	} else {
 		//Otherwise draw vertical line for quantity
-		startPoint = getChartPosition(lineData.value, 0, chartBoundries);
-		endPoint = getChartPosition(lineData.value, 1.0, chartBoundries);
+		startPoint = getChartPosition(lineData.value, 0, chartBoundaries);
+		endPoint = getChartPosition(lineData.value, 1.0, chartBoundaries);
 	}
 	
 	//Create new path
@@ -530,17 +574,16 @@ function drawPriceQuantityLine( lineData, chartBoundries, lineStyle ) {
 		//Check if line is price (horizontal) or quantity (vertical)
 		if(lineData.type === "price") {
 			//Draw vertical intersection lines for price (which is horizontal)
-			intersectionEndPoint = new Point(intersections[i].point.x, chartBoundries.bottom);
+			intersectionEndPoint = new Point(intersections[i].point.x, chartBoundaries.bottom);
 		} else {
 			//Draw horizontal intersection lines for quantity (which is vertica)
-			intersectionEndPoint = new Point(chartBoundries.left, intersections[i].point.y);
+			intersectionEndPoint = new Point(chartBoundaries.left, intersections[i].point.y);
 		}
 		
 		var intersectionLine = new Path.Line(intersections[i].point, intersectionEndPoint);
-	  intersectionLine.style = lineStyle;
+		intersectionLine.style = lineStyle;
 	}
 }
-
 
 function createChartLineButtons( chartLinesLayer ) {
 	var chartLines = chartLinesLayer.children;
@@ -576,7 +619,7 @@ function createChartLineButtons( chartLinesLayer ) {
 			point: buttonPosition,
 			name: currentLine.data.label,
 			fillColor: prefs.color.buttonText,
-			content: currentLine.data.label,
+			content: createLabel(currentLine.data),
 			justification: "center"
 		} );
 		label.style = prefs.textStyle.buttonLabel;
@@ -607,9 +650,9 @@ function createChartLineButtons( chartLinesLayer ) {
 /**
  * Given the layer with chart lines get the intersections of with lines of other types
  * @param {Layer} chartLinesLayer 
- * @param {Rectangle} chartBoundries 
+ * @param {Rectangle} chartBoundaries 
  */
-function createIntersectionLines( chartLinesLayer, chartBoundries ){
+function createIntersectionLines( chartLinesLayer, chartBoundaries ){
 	var chartLines = chartLinesLayer.children;
 
 	for( var i = 0; i < chartLines.length; i++){
@@ -622,8 +665,8 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
 				var crossings = lineA.children["path"].getCrossings(lineB.children["path"]);
 				if( lineA.visible && lineB.visible && crossings.length > 0 ){
 					var intersectionPoint = crossings[0].point;
-					var leftAxisPoint = new Point( chartBoundries.left, intersectionPoint.y );
-					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundries.bottom );
+					var leftAxisPoint = new Point( chartBoundaries.left, intersectionPoint.y );
+					var bottomAxisPoint = new Point( intersectionPoint.x, chartBoundaries.bottom );
 					var intersection = new Path([leftAxisPoint, intersectionPoint, bottomAxisPoint]);
 					intersection.style = prefs.lineStyle.intersection;
 				}
@@ -633,15 +676,41 @@ function createIntersectionLines( chartLinesLayer, chartBoundries ){
 }
 
 /**
+ * Find a pivot point for a given line, using intersections lines of different type and ranked by lowest index.
+ * @param {*} line 
+ * @param {*} chartLinesLayer 
+ */
+function findPivot( line, chartLines ){
+	var pivotPoint = null;
+	var currentIndex = Number.MAX_SAFE_INTEGER;
+
+	for( var i = 0; i < chartLines.length; i++){
+		var lineB = chartLines[i];
+
+		//Only check for crossing between different types of lines
+		if( line.data.type != lineB.data.type) {
+			var crossings = line.children["path"].getCrossings(lineB.children["path"]);
+			if( lineB.visible && crossings.length > 0 ){
+				if( lineB.data.index < currentIndex ) {
+					pivotPoint = crossings[0].point;
+					currentIndex = lineB.data.index;
+				}
+			}
+		}
+	}
+	return pivotPoint;
+}
+
+/**
  * Get position of lines on chart from x and y values between 0 and 1
  * @param {Number} x Value should between  0 an 1
  * @param {Number} y Value should between  0 an 1
- * @param {Rectangle} chartBoundries 
+ * @param {Rectangle} chartBoundaries 
  * @return {Point} 
  */
-function getChartPosition( x, y, chartBoundries ) {
-	var xPos = chartBoundries.left + chartBoundries.width * x;
-	var yPos = chartBoundries.top + chartBoundries.height - chartBoundries.height * y;
+function getChartPosition( x, y, chartBoundaries ) {
+	var xPos = chartBoundaries.left + chartBoundaries.width * x;
+	var yPos = chartBoundaries.top + chartBoundaries.height - chartBoundaries.height * y;
 
 	return new Point(xPos, yPos);
 }
@@ -649,11 +718,71 @@ function getChartPosition( x, y, chartBoundries ) {
 /**
  * Given a point within the chart/canvas space return a value between 0 and 1.0
  * @param {Point} point 
- * @param {Rectangle} chartBoundries
+ * @param {Rectangle} chartBoundaries
  * @return {Point}
  */
-function getUnitPosition( point, chartBoundries ) {
-	var x = (point.x - chartBoundries.left) / chartBoundries.width;
-	var y = (chartBoundries.top + chartBoundries.height - point.y) / chartBoundries.height;
+function getUnitPosition( point, chartBoundaries ) {
+	var x = (point.x - chartBoundaries.left) / chartBoundaries.width;
+	var y = (chartBoundaries.top + chartBoundaries.height - point.y) / chartBoundaries.height;
 	return new Point(x, y);
+}
+
+/**
+ * Return the intersection points of a line given two points on that line with a rectangular boundary
+ * @param {*} pointA 
+ * @param {*} pointB 
+ * @param {*} boundary 
+ */
+function getLineBoundaryIntersections(pointA, pointB, boundary) {
+	var slope = (pointA.y - pointB.y) / (pointA.x - pointB.x);
+
+	var start = boundPoint(boundary.left, boundary.top, boundary.bottom, pointA, slope);
+	var end = boundPoint(boundary.right, boundary.top, boundary.bottom, pointA, slope);
+	
+	return {start: start, end: end};
+}
+
+/**
+ * Find the intersection of a line with a given boundary on x axis and a top and bottom bounds
+ * @param {*} xBound 
+ * @param {*} top 
+ * @param {*} bottom 
+ * @param {*} point 
+ * @param {*} slope 
+ */
+function boundPoint(xBound, top, bottom, point, slope) {
+	var y = getYFor(xBound, point, slope);
+	var x;
+	
+	if( y < top ) {
+		y = top;
+		x = getXFor(top, point, slope);
+	} else if( y > bottom ) {
+		y = bottom;
+		x = getXFor(bottom, point, slope);
+	} else {
+		x = xBound;
+	}
+	
+	return new Point(x, y);
+}
+
+/**
+ * Returns value of x for a line through a given point with a given slope at specific value of y.
+ * @param {*} y Value of y
+ * @param {*} point Point on the line
+ * @param {*} slope Slope of the line
+ */
+function getXFor(y, point, slope) {
+	return point.x + (y - point.y) / slope;
+}
+
+/**
+ * Returns value of y for a line through a given point with a given slope at specific value of x.
+ * @param {*} x Value of x
+ * @param {*} point Point on the line
+ * @param {*} slope Slope of the line
+ */
+function getYFor(x, point, slope) {
+	return slope * (x - point.x) + point.y;
 }
