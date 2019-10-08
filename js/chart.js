@@ -682,7 +682,7 @@ function createIntersectionLines( chartLinesLayer, chartBoundaries ){
  */
 function findPivot( line, chartLines ){
 	var pivotPoint = null;
-	var currentIndex = Number.MAX_SAFE_INTEGER;
+	var currentIndex = 9999999; // Tried using 'Number.MAX_SAFE_INTEGER;' but doesn't work in Smart Notebook
 
 	for( var i = 0; i < chartLines.length; i++){
 		var lineB = chartLines[i];
