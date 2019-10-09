@@ -130,6 +130,7 @@ var yAxisLabelText = "";  // Price
 
 //Temporary price and quantity line when hovering near axis
 var tempPriceQuantityLineData = null;
+var startCreateTempPriceQuantityLine = false; 
 
 //Create the charts
 createChart(data, prefs);
@@ -278,60 +279,86 @@ function createPriceQuantityHoverAreas(chartBoundaries) {
 	leftAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0, 0.1);
 	bottomAxisHoverArea.fillColor = new Color(1.0,1.0, 1.0, 0.1);
 
-	//Update any temporary price (horizontal) lines
-	leftAxisHoverArea.onMouseMove = function(event) {
-		project.layers["tempPriceQuantityLines"].removeChildren();
-		project.layers["tempPriceQuantityLines"].activate();
+	//Function to create temp lines
+	var createPriceQuantityLineData = function (type, point, label, chartBoundaries) {
+		var value;
+		if(type === "quantity") {
+			point.x = constrain(point.x, chartBoundaries.left, chartBoundaries.right);
+			value = getUnitPosition(point, chartBoundaries).x;
+		} else {
+			point.y = constrain(point.y, chartBoundaries.top, chartBoundaries.bottom);
+			value = getUnitPosition(point, chartBoundaries).y;
+		}	
 
-		tempPriceQuantityLineData = {
-			label: "",
-			type: "price",
-			value: getUnitPosition(event.point, chartBoundaries).y
-		};
-
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
-	}
-	
-	//Update any temporary quantity (vertical) lines
-	bottomAxisHoverArea.onMouseMove = function(event) {
-		project.layers["tempPriceQuantityLines"].removeChildren();
-		project.layers["tempPriceQuantityLines"].activate();
-
-		tempPriceQuantityLineData = {
-			label: "",
-			type: "quantity",
-			value: getUnitPosition(event.point, chartBoundaries).x
-		};
-
-		drawPriceQuantityLine(tempPriceQuantityLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
-	}
-
-	//Create persistent line on mouse up
-	leftAxisHoverArea.onMouseUp = function(event) {
 		priceQuantityLineData = {
-			label: "P₀",
-			type: "price",
-			value: getUnitPosition(event.point, chartBoundaries).y
+			label: label,
+			type: type,
+			value: value
 		};
 
-		data.priceQuantityLines = [priceQuantityLineData];
-		updateChart(data, prefs);
-	}
-
-	bottomAxisHoverArea.onMouseUp = function(event) {
-		priceQuantityLineData = {
-			label: "Q₀",
-			type: "quantity",
-			value: getUnitPosition(event.point, chartBoundaries).x
-		};
-
-		data.priceQuantityLines = [priceQuantityLineData];
-		updateChart(data, prefs);
+		return priceQuantityLineData;
 	}
 
 	//Function for removing temporary lines
 	var removeTemporaryLines = function(event) {
 		project.layers["tempPriceQuantityLines"].removeChildren();
+	}
+
+	leftAxisHoverArea.onMouseDown = function(event) {
+		startCreateTempPriceQuantityLine = true;
+		project.layers["tempPriceQuantityLines"].removeChildren();
+		project.layers["tempPriceQuantityLines"].activate();
+		var tempLineData = createPriceQuantityLineData("price", event.point, "", chartBoundaries);
+		drawPriceQuantityLine(tempLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
+	};
+
+	bottomAxisHoverArea.onMouseDown = function(event) {
+		startCreateTempPriceQuantityLine = true;
+		project.layers["tempPriceQuantityLines"].removeChildren();
+		project.layers["tempPriceQuantityLines"].activate();
+		var tempLineData = createPriceQuantityLineData("quantity", event.point, "", chartBoundaries);
+		drawPriceQuantityLine(tempLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
+	};
+
+	//Update any temporary price (horizontal) lines
+	leftAxisHoverArea.onMouseDrag = function(event) {
+		project.layers["tempPriceQuantityLines"].removeChildren();
+		project.layers["tempPriceQuantityLines"].activate();
+		var tempLineData = createPriceQuantityLineData("price", event.point, "", chartBoundaries);
+		drawPriceQuantityLine(tempLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
+	}
+	
+	//Update any temporary quantity (vertical) lines
+	bottomAxisHoverArea.onMouseDrag = function(event) {
+		project.layers["tempPriceQuantityLines"].removeChildren();
+		project.layers["tempPriceQuantityLines"].activate();
+		var tempLineData = createPriceQuantityLineData("quantity", event.point, "", chartBoundaries);
+		drawPriceQuantityLine(tempLineData, chartBoundaries, prefs.lineStyle.intersectionHover);
+	}
+
+	//Create persistent line on mouse up
+	leftAxisHoverArea.onMouseUp = function(event) {
+		if(startCreateTempPriceQuantityLine) {
+			var lineData = createPriceQuantityLineData("price", event.point, "P₀", chartBoundaries);
+	
+			data.priceQuantityLines = [lineData];
+			updateChart(data, prefs);
+
+			startCreateTempPriceQuantityLine = false;
+		}
+		removeTemporaryLines()
+	}
+
+	bottomAxisHoverArea.onMouseUp = function(event) {
+		if(startCreateTempPriceQuantityLine) {
+			var lineData = createPriceQuantityLineData("quantity", event.point, "Q₀", chartBoundaries);
+	
+			data.priceQuantityLines = [lineData];
+			updateChart(data, prefs);
+	
+			startCreateTempPriceQuantityLine = false;
+		}
+		removeTemporaryLines()
 	}
 
 	// Remove any temporary price lines
@@ -340,6 +367,8 @@ function createPriceQuantityHoverAreas(chartBoundaries) {
 	// Remove any temporary quantity lines
 	bottomAxisHoverArea.onMouseLeave = removeTemporaryLines;
 }
+
+
 
 /**
  * Create labels for chart axis
