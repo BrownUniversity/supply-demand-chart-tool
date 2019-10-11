@@ -17,10 +17,10 @@ var prefs = {
 		buttonText: "white"
 	},
 	margin: {
-		left: 125,
-		right: 110,
-		top: 25,
-		bottom: 75
+		left: 50,
+		right: 125,
+		top: 40,
+		bottom: 40
 	},
 	lineStyle: {
 		supplyDemand: {
@@ -52,7 +52,7 @@ var prefs = {
 		},
 		supplyDemandLabel: {
 			fontFamily: "'Roboto', 'sans-serif'",
-			fontSize: 36
+			fontSize: 32
 		},
 		buttonLabel: {
 			fontFamily: "'Roboto', 'sans-serif'",
@@ -165,26 +165,25 @@ function constrain(value, min, max) {
  * @param {*} containerRectangle 
  * @param {*} margin 
  */
-function createSafeBoxDimensions(containerBounds, margin){
-	var safeBox = new Rectangle( containerBounds );
-	safeBox.width -= (margin.left + margin.right);
-	safeBox.height -= (margin.top + margin.bottom);
-	safeBox.topLeft.x = margin.left;
-	safeBox.topLeft.y = margin.top;
-	return safeBox;
+function createSafeBoxDimensions(bounds, margin){
+	var x = margin.left;
+	var y = margin.top;
+	var w = bounds.width - (margin.left + margin.right);
+	var h = bounds.height - (margin.top + margin.bottom);
+	return new Rectangle(new Point(x, y), new Size(w, h));
 }
 
 /**
  * Create chart dimensions based on a container rectangle and a margin to offset from that rectagle
- * @param {*} containerBounds 
+ * @param {*} bounds 
  */
-function createChartDimensions(containerBounds) {
-	var chartDimension = Math.min(containerBounds.width, containerBounds.height);
+function createChartDimensions(bounds) {
+	var size = Math.min(bounds.width, bounds.height);
 	
 	// Chart settings
-	var chartSize = new Size(chartDimension, chartDimension);
+	var chartSize = new Size(size, size);
 	var chartBoundaries = new Rectangle( new Point(0, 0), chartSize);
-	chartBoundaries.topCenter = containerBounds.topCenter;
+	chartBoundaries.center = bounds.center;
 
 	return chartBoundaries;
 }
@@ -426,7 +425,14 @@ function createLine( lineData, chartBoundaries ) {
 
 	//Create new label
 	var labelPosition = new Point(endPoint);
-	labelPosition.x += 10;
+	if( endPoint.x >= chartBoundaries.right) {
+		labelPosition.x += 10;
+	} else if(endPoint.y > chartBoundaries.top) {
+		labelPosition.y += 35;
+	} else {
+		labelPosition.y -= 10;
+	}
+	
 
 	var label = new PointText( {
 		point: labelPosition,
@@ -669,9 +675,10 @@ function createChartLineButtons( chartLinesLayer ) {
 	}
 
 	var safeBox = createSafeBoxDimensions(view.bounds, prefs.margin)
-	buttons.pivot = buttons.bounds.topRight;
-	buttons.position = safeBox.topRight;
-	buttons.position.x += prefs.layout.supplyDemandButton.horizontalOffset;
+	var chartBox = createChartDimensions(safeBox);
+	buttons.pivot = buttons.bounds.topLeft;
+	buttons.position = chartBox.topRight;
+	buttons.position.x += 75;
 }
 
 /**
