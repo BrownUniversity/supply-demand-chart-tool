@@ -87,8 +87,8 @@ var data = {
 				index: 0,
 				label: "",
 				type: "supply",
-				start: 0.2,
-				end: 0.7,
+				start: {x: 0.0, y: 0.2},
+				end: {x: 1.0, y: 0.7},
 				color: prefs.color.supply[0],
 				visible: true
 			},
@@ -96,8 +96,8 @@ var data = {
 				index: 1,
 				label: "",
 				type: "supply",
-				start: 0.3,
-				end: 0.8,
+				start: {x: 0.0, y: 0.3},
+				end: {x: 1.0, y: 0.8},
 				color: prefs.color.supply[2],
 				visible: false
 			},
@@ -105,8 +105,8 @@ var data = {
 				index: 0,
 				label: "",
 				type: "demand",
-				start: 0.7,
-				end: 0.2,
+				start: {x: 0.0, y: 0.7},
+				end: {x: 1.0, y: 0.2},
 				color: prefs.color.demand[0],
 				visible: true
 			},
@@ -114,8 +114,8 @@ var data = {
 				index: 1,
 				label: "",
 				type: "demand",
-				start: 0.8,
-				end: 0.3,
+				start: {x: 0.0, y: 0.8},
+				end: {x: 1.0, y: 0.3},
 				color: prefs.color.demand[2],
 				visible: false
 			}
@@ -421,8 +421,8 @@ function createLabel (lineData) {
  */
 function createLine( lineData, chartBoundaries ) {
 
-	var startPoint = getChartPosition(0, lineData.start, chartBoundaries);
-	var endPoint = getChartPosition(1.0, lineData.end, chartBoundaries);
+	var startPoint = getChartPosition(lineData.start.x, lineData.start.y, chartBoundaries);
+	var endPoint = getChartPosition(lineData.end.x, lineData.end.y, chartBoundaries);
 
 	//Create new label
 	var labelPosition = new Point(endPoint);
@@ -462,62 +462,55 @@ function createLine( lineData, chartBoundaries ) {
 	}
 
 	linePath.onMouseDrag = function (event){
-		if( event.point.isInside(dragBoundaries) ) {
-			if( selectedPath ) {
-				var parentGroup = selectedPath.parent;
+		if( selectedPath ) {
+			var parentGroup = selectedPath.parent;
 
-				if(selectedSegment) {
-
-					//Rotate line around intersection with counterpart
-					
-					var supplyDemandLines = project.layers["supplyDemandLines"].children;
-					
-					var pivot = findPivot(parentGroup, supplyDemandLines);
-					
-					if( pivot === null) {
-						if(selectedSegment === selectedPath.firstSegment) {
-							pivot = new Point(selectedPath.lastSegment.point);
-						} else {
-							pivot = new Point(selectedPath.firstSegment.point);
-						}
-					}
-
-					var intersection = getLineBoundaryIntersections(event.point, pivot, chartBoundaries);
-
-					//Prevent line from sliding pivot when opposite end hits bounds
-					if(  intersection.start.y < chartBoundaries.bottom 
-						&& intersection.start.y > chartBoundaries.top
-						&& intersection.end.y < chartBoundaries.bottom 
-						&& intersection.end.y > chartBoundaries.top
-						) {
-							selectedPath.firstSegment.point.y = intersection.start.y;
-							selectedPath.lastSegment.point.y = intersection.end.y;
-						}
-
-					
-
-					pivotPointIndicatorCircle.position = pivot;
-					pivotPointIndicatorCircle.visible = true;
-				} else {
-					//Drag line horizontally or vertically
-					
-					var topEdge = selectedPath.bounds.top + event.delta.y;
-					var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
-					
-					//Check to make sure part of path doesn't extend beyond the chart area.
-					if( topEdge > chartBoundaries.top && bottomEdge < chartBoundaries.bottom){
-						selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundaries.top, chartBoundaries.bottom);
+			if(selectedSegment) {
+				//ROTATE line around intersection with counterpart
+				
+				var supplyDemandLines = project.layers["supplyDemandLines"].children;
+				
+				var pivot = findPivot(parentGroup, supplyDemandLines);
+				
+				if( pivot === null) {
+					if(selectedSegment === selectedPath.firstSegment) {
+						pivot = new Point(selectedPath.lastSegment.point);
+					} else {
+						pivot = new Point(selectedPath.firstSegment.point);
 					}
 				}
 
-				parentGroup.children["label"].point.y = selectedPath.lastSegment.point.y;
+				var intersection = getLineBoundaryIntersections(event.point, pivot, chartBoundaries);
+
+				selectedPath.firstSegment.point = intersection.start;
+				selectedPath.lastSegment.point = intersection.end;
+
+				pivotPointIndicatorCircle.position = pivot;
+				pivotPointIndicatorCircle.visible = true;
+			} else {
+				//DRAG line horizontally or vertically
 				
-				parentGroup.data.start = getUnitPosition( selectedPath.firstSegment.point, chartBoundaries ).y;
-				parentGroup.data.end = getUnitPosition(selectedPath.lastSegment.point, chartBoundaries ).y;
+				var topEdge = selectedPath.bounds.top + event.delta.y;
+				var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
+				
+				//Check to make sure part of path doesn't extend beyond the chart area.
+				if( topEdge > chartBoundaries.top && bottomEdge < chartBoundaries.bottom){
+					selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundaries.top, chartBoundaries.bottom);
+				}
 			}
-	
-			updateChart(data, prefs);
+
+			parentGroup.children["label"].point.y = selectedPath.lastSegment.point.y;
+			
+			var unitStartPoint = getUnitPosition( selectedPath.firstSegment.point, chartBoundaries );
+			var unitEndPoint = getUnitPosition(selectedPath.lastSegment.point, chartBoundaries );
+			
+			parentGroup.data.start.x = unitStartPoint.x;
+			parentGroup.data.start.y = unitStartPoint.y;
+			parentGroup.data.end.x = unitEndPoint.x;
+			parentGroup.data.end.y = unitEndPoint.y;
 		}
+
+		updateChart(data, prefs);
 	}
 
 	linePath.onMouseUp = function (event) {
