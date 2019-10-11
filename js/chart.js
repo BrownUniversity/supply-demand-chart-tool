@@ -67,9 +67,6 @@ var prefs = {
 			spacing: 10,
 			horizontalOffset: 110,
 			cornerRadius: 10
-		},
-		priceQuantityLineLabel: {
-			offset: 45
 		}
 	},
 	ui: {
@@ -575,9 +572,9 @@ function drawPriceQuantityLine( lineData, chartBoundaries, lineStyle ) {
 	//Create new label
 	var labelPosition = new Point(startPoint);
 	if(lineData.type === "price") {
-		labelPosition.x -= prefs.layout.priceQuantityLineLabel.offset;
+		labelPosition.x -= 40;
 	} else {
-		labelPosition.y += prefs.layout.priceQuantityLineLabel.offset;
+		labelPosition.y += 30;
 	}
 	
 	var label = new PointText( {
