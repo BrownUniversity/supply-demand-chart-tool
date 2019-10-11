@@ -455,6 +455,7 @@ function createLine( lineData, chartBoundaries ) {
 			//Start rotation
 			selectedSegment = hitResults.segment;
 		} else if( hitResults.type == 'stroke' ) {
+			//Start drag
 			selectedSegment = null;
 		} else {
 			selectedPath = null;
@@ -493,10 +494,14 @@ function createLine( lineData, chartBoundaries ) {
 				var topEdge = selectedPath.bounds.top + event.delta.y;
 				var bottomEdge = selectedPath.bounds.bottom + event.delta.y;
 				
-				//Check to make sure part of path doesn't extend beyond the chart area.
-				if( topEdge > chartBoundaries.top && bottomEdge < chartBoundaries.bottom){
-					selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundaries.top, chartBoundaries.bottom);
+				if( event.point.isInside(chartBoundaries) ) {
+					selectedPath.position += event.delta;
+					var chartEdgeIntersection = getLineBoundaryIntersections(selectedPath.firstSegment.point, selectedPath.lastSegment.point, chartBoundaries);
+					selectedPath.firstSegment.point = new Point(chartEdgeIntersection.start);
+					selectedPath.lastSegment.point = new Point(chartEdgeIntersection.end);
 				}
+				
+				//selectedPath.position.y = constrain(selectedPath.position.y + event.delta.y, chartBoundaries.top, chartBoundaries.bottom);
 			}
 
 			parentGroup.children["label"].point.y = selectedPath.lastSegment.point.y;
